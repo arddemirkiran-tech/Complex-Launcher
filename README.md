@@ -1,4 +1,8 @@
-# 🚀 Complex Launcher — Advanced Minecraft Launcher
+<img src="logo_1024.png" align="left" width="350">
+ 
+ 
+ 
+ # 🚀 Complex Launcher — Advanced Minecraft Launcher
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
