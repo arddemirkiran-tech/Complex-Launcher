@@ -34,31 +34,80 @@ The repository currently does not include an `install_java.bat`. This is not a b
 ### Example batch file (`install_java.bat`)
 Save the following as `install_java.bat` or `start_launcher.bat` and adjust the startup command to match your build artifact (jar or main class):
 
-```bat
 @echo off
-title Complex Launcher - Java Check
+setlocal enabledelayedexpansion
+title ComplexLauncher - Java 21 Yukleyici
+color 0B
 
-echo Checking Java installation...
+echo =========================================
+echo   ComplexLauncher - Java 21 Yukleyici
+echo =========================================
+echo.
+
+:: Zaten Java 17+ var mi kontrol et
 java -version >nul 2>&1
-if %errorlevel% neq 0 (
-  echo Java not found or not in PATH.
-  echo Please install Java 17 or Java 21 and set JAVA_HOME and PATH accordingly.
-  pause
-  exit /b 1
+if %errorlevel% == 0 (
+    for /f "tokens=3" %%v in ('java -version 2^>^&1 ^| findstr /i "version"') do (
+        set JVER=%%v
+        set JVER=!JVER:"=!
+        for /f "tokens=1 delims=." %%m in ("!JVER!") do set JMAJ=%%m
+    )
+    if !JMAJ! GEQ 17 (
+        echo Java !JVER! zaten yuklu. Isleme gerek yok.
+        echo.
+        pause
+        exit /b 0
+    )
+    echo Mevcut Java surumu !JVER! ^(eski^). Java 21 yuklenecek...
+    echo.
 )
 
-echo Java detected:
+:: Indirme URL - Eclipse Temurin 21 LTS (Windows x64)
+set JDK_URL=https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.3%%2B9/OpenJDK21U-jdk_x64_windows_hotspot_21.0.3_9.msi
+set JDK_MSI=%TEMP%\java21_installer.msi
+
+echo Java 21 (Eclipse Temurin LTS) indiriliyor...
+echo Kaynak: %JDK_URL%
+echo.
+
+:: PowerShell ile indir
+powershell -NonInteractive -NoProfile -ExecutionPolicy Bypass -Command ^
+    "try { $p = New-Object System.Net.WebClient; $p.DownloadFile('%JDK_URL%', '%JDK_MSI%'); Write-Host 'Indirme tamamlandi.' } catch { Write-Host ('HATA: ' + $_.Exception.Message); exit 1 }"
+
+if %errorlevel% neq 0 (
+    echo.
+    echo HATA: Java indirilemedi. Internet baglantinizi kontrol edin.
+    echo Manuel olarak su adresten indirin:
+    echo https://adoptium.net/temurin/releases/?version=21
+    pause
+    exit /b 1
+)
+
+echo.
+echo Java 21 yukleniyor... (UAC onay penceresi acilabilir)
+msiexec /i "%JDK_MSI%" /qb ADDLOCAL=FeatureMain,FeatureEnvironment,FeatureJarFileRunWith,FeatureJavaHome INSTALLDIR="C:\Program Files\Eclipse Adoptium\jdk-21" /L*v "%TEMP%\java21_install.log"
+
+if %errorlevel% neq 0 (
+    echo.
+    echo HATA: Yukleme basarisiz. Log dosyasi: %TEMP%\java21_install.log
+    pause
+    exit /b 1
+)
+
+del /f /q "%JDK_MSI%" 2>nul
+
+echo.
+echo Java 21 basariyla yuklendi!
+echo.
+
+:: PATH'i guncelle
+set "NEW_JAVA=C:\Program Files\Eclipse Adoptium\jdk-21\bin"
 java -version
-
-echo Starting Complex Launcher...
-:: Replace the following lines with your actual startup command:
-:: Example (runnable jar):
-:: java -jar build/libs/complex-launcher.jar
-:: Example (from compiled classes):
-:: java -cp "out/production/classes;lib/*" com.complex.launcher.Main
-
+echo.
+echo ComplexLauncher artik Java 21 ile calisacak.
+echo.
 pause
-```
+
 
 Notes:
 - Replace the example startup lines with the actual path to your JAR or the classpath and main class.
