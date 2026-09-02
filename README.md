@@ -14,9 +14,6 @@ A next-generation Minecraft launcher focused on robust mod management, real-time
 - **Visual Customization (`ResourcepacksPanel`, `ShaderPanel`)**  
   Easy installation and switching of resource packs and shaders.
 
-- **Performance & System Monitoring (`FpsOverlay`, `SystemMonitor`)**  
-  In-game overlays to track FPS, CPU/GPU usage, memory pressure, and detect performance bottlenecks in real time.
-
 - **Server Management (`ServersPanel`, `MyServersPanel`)**  
   Quick-connect UI for local and remote servers (Arclight, Paper, Forge, Fabric).
 
@@ -70,7 +67,6 @@ Notes:
 ## 🚀 System Optimization Recommendations
 
 - RAM allocation: On systems with 16 GB RAM, allocate **6–8 GB** to Minecraft for heavily-modded packs to improve stability.
-- Monitoring: Use `SystemMonitor` and `FpsOverlay` to observe CPU/GPU usage, memory pressure, and frame rate while testing.
 - Network: If using VPNs, tunnels, or proxies, monitor ping values to diagnose latency when connecting to remote servers.
 
 ## Contributing & Next Steps
