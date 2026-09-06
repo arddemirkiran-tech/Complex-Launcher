@@ -18,7 +18,8 @@ A next-generation Minecraft launcher focused on robust mod management, real-time
   Quick-connect UI for local and remote servers (Arclight, Paper, Forge, Fabric).
 
 - **Flexible Login (`LoginDialog`, `OfflineLoginDialog`)**  
-  Support for online (premium) authentication and offline/local profiles for testing.
+  Support for online (premium) authentication and offline/local profiles for pirate players
+.
 
 - **UI & Theming (`Theme`, `GalleryStrip`, `SplashScreen`)**  
   Modern components and configurable themes for a polished launcher experience.
