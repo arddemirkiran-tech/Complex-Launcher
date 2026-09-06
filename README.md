@@ -37,7 +37,6 @@ updated with v27
 ## Contributing & Next Steps
 
 If you'd like, I can:
-- Add a polished `install_java.bat` and a cross-platform `install_java.sh`.
 - Add a startup script that prefers a bundled JRE and falls back to system Java.
 - Provide Gradle/Maven build instructions and an example runnable JAR configuration.
 - Add usage examples, screenshots, release notes, and a short roadmap.
