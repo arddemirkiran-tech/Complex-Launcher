@@ -1,8 +1,0 @@
-name = "complex-launcher"
-compatibility_date = "2026-09-01"
-
-# Statik site: public/ klasoru oldugu gibi yayinlanir.
-# index.html otomatik olarak / yoluna servis edilir.
-# exe: public/assets/Complex-Launcher-Setup.exe -> /assets/Complex-Launcher-Setup.exe
-[assets]
-directory = "./public"
