@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complex Launcher — The all-in-one Minecraft Launcher</title>
+<meta name="description" content="Complex Launcher v32 — mods, shaders, resource packs, modpacks, servers, 21 themes, cat easter egg and more. Free downloads, auto-updating.">
+<link rel="icon" href="assets/logo_1024.png">
+<link rel="apple-touch-icon" href="assets/logo_1024.png">
+<meta property="og:title" content="Complex Launcher — The all-in-one Minecraft Launcher">
+<meta property="og:description" content="One-click mods with 100% dependency resolution, 21 themes, performance mode and a very serious cat.">
+<meta property="og:image" content="assets/shot-home.png">
+<style>
+:root{
+  --bg:#0b0817; --bg2:#120d26; --card:#181129; --card2:#1f1535;
+  --border:#2a1f4a; --text:#efeaff; --muted:#a89cc8; --dim:#6f639a;
+  --accent:#8b5cf6; --accent2:#a78bfa; --accent3:#c084fc;
+  --green:#34d399; --orange:#fb923c; --pink:#f472b6;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.6;overflow-x:hidden}
+::selection{background:var(--accent);color:#fff}
+a{color:var(--accent2);text-decoration:none}
+.container{max-width:1140px;margin:0 auto;padding:0 24px}
+/* ---------- NAV ---------- */
+nav{position:sticky;top:0;z-index:100;background:rgba(11,8,23,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;color:var(--text)}
+.brand img{width:34px;height:34px;border-radius:8px}
+.brand .v{font-size:11px;font-weight:600;background:linear-gradient(90deg,var(--accent),var(--accent3));padding:2px 8px;border-radius:99px;margin-left:2px}
+.nav-links{display:flex;gap:26px;align-items:center}
+.nav-links a{color:var(--muted);font-size:14.5px;font-weight:500;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:12px;font-weight:600;font-size:15px;cursor:pointer;border:none;transition:transform .15s,box-shadow .2s,background .2s}
+.btn-accent{background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff;box-shadow:0 4px 24px rgba(139,92,246,.35)}
+.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(139,92,246,.5)}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--accent);background:rgba(139,92,246,.08)}
+.btn-lg{padding:15px 34px;font-size:17px;border-radius:14px}
+/* ---------- HERO ---------- */
+.hero{position:relative;padding:88px 0 60px;text-align:center;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:
+  radial-gradient(600px 300px at 20% 0%,rgba(139,92,246,.18),transparent),
+  radial-gradient(600px 300px at 80% 10%,rgba(192,132,252,.12),transparent);pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.35);color:var(--accent2);font-size:13px;font-weight:600;padding:6px 16px;border-radius:99px;margin-bottom:24px}
+.hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{font-size:clamp(38px,6vw,64px);font-weight:800;line-height:1.12;letter-spacing:-1px;margin-bottom:20px}
+.hero h1 .grad{background:linear-gradient(90deg,var(--accent2),var(--accent3),var(--pink));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p.sub{font-size:19px;color:var(--muted);max-width:640px;margin:0 auto 36px}
+.hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.hero-note{font-size:13px;color:var(--dim)}
+.hero-stats{display:flex;gap:40px;justify-content:center;margin-top:48px;flex-wrap:wrap}
+.stat b{font-size:30px;font-weight:800;background:linear-gradient(90deg,var(--accent2),var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.stat span{display:block;font-size:13px;color:var(--dim);margin-top:2px}
+/* ---------- HERO APP WINDOW ---------- */
+.app-window{max-width:980px;margin:56px auto 0;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px rgba(139,92,246,.15);background:var(--card)}
+.app-titlebar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#17102c;border-bottom:1px solid var(--border)}
+.app-titlebar .tdot{width:11px;height:11px;border-radius:50%}
+.app-titlebar .tname{margin-left:10px;font-size:12.5px;color:var(--muted)}
+.app-shot{width:100%;display:block}
+.app-shot img{width:100%;display:block}
+/* tab strip under window */
+.shot-tabs{display:flex;gap:8px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.shot-tab{padding:7px 18px;border-radius:99px;font-size:13.5px;font-weight:600;color:var(--muted);background:var(--card);border:1px solid var(--border);cursor:pointer;transition:all .2s}
+.shot-tab.active{color:#fff;background:linear-gradient(135deg,var(--accent),#7c3aed);border-color:transparent}
+.app-frame img.fade{animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:.35}to{opacity:1}}
+/* ---------- SECTIONS ---------- */
+section{padding:84px 0}
+.sec-head{text-align:center;margin-bottom:52px}
+.sec-head h2{font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-.5px}
+.sec-head p{color:var(--muted);font-size:16.5px;margin-top:12px;max-width:640px;margin-left:auto;margin-right:auto}
+.grid{display:grid;gap:18px}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px;transition:transform .2s,border-color .2s,box-shadow .25s}
+.card:hover{transform:translateY(-4px);border-color:rgba(139,92,246,.5);box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.card .ico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px;background:rgba(139,92,246,.14)}
+.card h3{font-size:17.5px;font-weight:700;margin-bottom:8px}
+.card p{font-size:14.5px;color:var(--muted)}
+/* themes row */
+.themes{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:34px}
+.tchip{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:99px;padding:7px 16px;font-size:13.5px;font-weight:600;color:var(--muted)}
+.tchip .sw{width:14px;height:14px;border-radius:50%}
+/* download section */
+.dl{background:linear-gradient(180deg,transparent,rgba(139,92,246,.06))}
+.dl-card{max-width:820px;margin:0 auto;background:var(--card2);border:1px solid rgba(139,92,246,.4);border-radius:20px;padding:44px;text-align:center;box-shadow:0 20px 60px rgba(139,92,246,.12)}
+.dl-card h3{font-size:26px;font-weight:800;margin-bottom:8px}
+.dl-card .ver{color:var(--green);font-weight:700;font-size:15px}
+.dl-card p{color:var(--muted);margin:14px 0 26px;font-size:15px}
+.os-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:34px;text-align:left}
+.step{background:rgba(139,92,246,.07);border:1px solid var(--border);border-radius:12px;padding:16px}
+.step b{color:var(--accent2);font-size:13px}
+.step p{font-size:13.5px;margin-top:4px;color:var(--muted)}
+.warn{max-width:820px;margin:18px auto 0;font-size:13px;color:var(--dim);text-align:center}
+/* roadmap */
+.road{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.road .card{border-left:3px solid var(--accent)}
+.road .card.done{border-left-color:var(--green)}
+.road .tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.road .done .tag{color:var(--green)}.road .tag{color:var(--accent2)}
+/* faq */
+.faq{max-width:760px;margin:0 auto}
+.faq details{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 22px;margin-bottom:12px;cursor:pointer}
+.faq details[open]{border-color:rgba(139,92,246,.5)}
+.faq summary{font-weight:600;font-size:15.5px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.faq summary::after{content:'+';color:var(--accent2);font-size:20px;font-weight:400;transition:transform .2s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{color:var(--muted);font-size:14.5px;margin-top:12px}
+footer{border-top:1px solid var(--border);padding:36px 0;color:var(--dim);font-size:13.5px;text-align:center}
+footer .container{display:flex;flex-direction:column;gap:8px}
+footer a{color:var(--muted)}
+@media(max-width:760px){.nav-links{display:none}.hero{padding:60px 0 44px}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container nav-in">
+    <a class="brand" href="#top">
+      <img src="assets/logo_1024.png" alt="Complex Launcher logo">
+      Complex Launcher <span class="v">v32</span>
+    </a>
+    <div class="nav-links">
+      <a href="#screens">Screenshots</a>
+      <a href="#features">Features</a>
+      <a href="#themes">Themes</a>
+      <a href="#download">Download</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <a class="btn btn-accent" href="#download">Download Free</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container">
+    <div class="hero-badge"><span class="dot"></span> v32 &middot; latest &middot; free forever</div>
+    <h1>The all-in-one<br><span class="grad">Minecraft Launcher</span></h1>
+    <p class="sub">One-click mods with 100% dependency resolution, shaders, modpacks, 21 themes, maximum performance mode &mdash; and a very serious cat.</p>
+    <div class="hero-cta">
+      <a class="btn btn-accent btn-lg" href="#download">&#11015;&#65039; Download for Windows</a>
+      <a class="btn btn-ghost btn-lg" href="#screens">See it in action</a>
+    </div>
+    <div class="hero-note">No account &middot; No telemetry &middot; Auto-updates built in</div>
+
+    <div class="app-window">
+      <div class="app-titlebar">
+        <span class="tdot" style="background:#ff5f57"></span>
+        <span class="tdot" style="background:#febc2e"></span>
+        <span class="tdot" style="background:#28c840"></span>
+        <span class="tname">Complex Launcher v32</span>
+      </div>
+      <div class="app-frame">
+        <img id="heroShot" class="fade" src="assets/shot-home.png" alt="Complex Launcher home screen">
+      </div>
+    </div>
+    <div class="shot-tabs" id="shotTabs">
+      <span class="shot-tab" data-shot="assets/shot-instances.png">Instances</span>
+      <span class="shot-tab active" data-shot="assets/shot-home.png">Home</span>
+      <span class="shot-tab" data-shot="assets/shot-mods.png">Mods</span>
+      <span class="shot-tab" data-shot="assets/shot-shaders.png">Shaders</span>
+      <span class="shot-tab" data-shot="assets/shot-resourcepacks.png">Resource Packs</span>
+      <span class="shot-tab" data-shot="assets/shot-modpacks.png">Modpacks</span>
+      <span class="shot-tab" data-shot="assets/shot-accounts.png">Accounts</span>
+      <span class="shot-tab" data-shot="assets/shot-settings.png">Settings</span>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat"><b>21</b><span>Themes built in</span></div>
+      <div class="stat"><b>5</b><span>Loaders supported</span></div>
+      <div class="stat"><b>18</b><span>Cat animation variants</span></div>
+      <div class="stat"><b>100%</b><span>Dependency coverage</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="screens" style="padding-top:30px">
+  <div class="container">
+    <div class="sec-head">
+      <h2>Every tab, captured</h2>
+      <p>Actual screenshots from the launcher &mdash; no mockups. Click one to enlarge it in the hero above.</p>
+    </div>
+    <div class="grid grid-3" id="shotGrid">
+      <div class="card" style="padding:14px;cursor:pointer" data-shot="assets/shot-instances.png"><img src="assets/shot-instances.png" style="width:100%;border-radius:10px" alt="Instances tab"><h3 style="margin-top:12px">&#127918; Instances</h3><p>All your instances as cards &mdash; click to launch, right-click to edit, rename or export as zip.</p></div>
+      <div class="card" style="padding:14px;cursor:pointer" data-shot="assets/shot-home.png"><img src="assets/shot-home.png" style="width:100%;border-radius:10px" alt="Home tab"><h3 style="margin-top:12px">&#127968; Home</h3><p>Account, version, loader (Vanilla / Fabric / Forge / NeoForge / OptiFine) and RAM with a recommended-memory hint.</p></div>
+      <div class="card" style="padding:14px;cursor:pointer" data-shot="assets/shot-mods.png"><img src="assets/shot-mods.png" style="width:100%;border-radius:10px" alt="Mods tab"><h3 style="margin-top:12px">&#129514; Mods</h3><p>Dual-platform search, one-click install with strict version safety, installed-mod manager and conflict resolver.</p></div>
+      <div class="card" style="padding:14px;cursor:pointer" data-shot="assets/shot-shaders.png"><img src="assets/shot-shaders.png" style="width:100%;border-radius:10px" alt="Shaders tab"><h3 style="margin-top:12px">&#127912; Shaders</h3><p>Shader search with live screenshot galleries, Iris/Oculus pairing handled automatically and in-app translation.</p></div>
+      <div class="card" style="padding:14px;cursor:pointer" data-shot="assets/shot-resourcepacks.png"><img src="assets/shot-resourcepacks.png" style="width:100%;border-radius:10px" alt="Resource packs tab"><h3 style="margin-top:12px">&#127991; Resource Packs</h3><p>Browse and install resource packs with previews, project info and one-click setup.</p></div>
+      <div class="card" style="padding:14px;cursor:pointer" data-shot="assets/shot-modpacks.png"><img src="assets/shot-modpacks.png" style="width:100%;border-radius:10px" alt="Modpacks tab"><h3 style="margin-top:12px">&#128230; Modpacks</h3><p>CurseForge modpack browser plus local import (.zip / .mrpack) &mdash; a friend's pack runs in one click.</p></div>
+      <div class="card" style="padding:14px;cursor:pointer" data-shot="assets/shot-accounts.png"><img src="assets/shot-accounts.png" style="width:100%;border-radius:10px" alt="Accounts tab"><h3 style="margin-top:12px">&#128100; Accounts</h3><p>Multiple Microsoft and offline accounts with instant switching.</p></div>
+      <div class="card" style="padding:14px;cursor:pointer" data-shot="assets/shot-settings.png"><img src="assets/shot-settings.png" style="width:100%;border-radius:10px" alt="Settings tab"><h3 style="margin-top:12px">&#9881;&#65039; Settings</h3><p>Maximum Performance toggle, auto-install list, Java management, theme creator and a danger zone that means it.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="container">
+    <div class="sec-head">
+      <h2>Everything in one launcher</h2>
+      <p>Built as a full desktop app &mdash; not a web wrapper. Every feature below ships in v32 today.</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="card"><div class="ico">&#129514;</div><h3>One-Click Mods</h3><p>Search Modrinth &amp; CurseForge side by side. Installs the correct build for your exact game version &mdash; wrong-version jars are rejected, never installed. Double-click a result to install.</p></div>
+      <div class="card"><div class="ico">&#128737;&#65039;</div><h3>100% Dependency Resolution</h3><p>Every required dependency resolved recursively &mdash; version-id-only entries, fallbacks, cache-poisoning protection, plus a Conflict Resolver that finds two mods wanting the same dependency at different versions.</p></div>
+      <div class="card"><div class="ico">&#127912;</div><h3>Shaders &amp; Resource Packs</h3><p>Shader packs with Iris/Oculus pairs handled automatically, resource packs with live galleries, in-app translation and rich project info panels.</p></div>
+      <div class="card"><div class="ico">&#128230;</div><h3>Modpacks</h3><p>Full modpack browser with one-click install. Instance import/export as zip &mdash; share your whole setup with a friend in one file.</p></div>
+      <div class="card"><div class="ico">&#127769;</div><h3>Server Tools</h3><p>Server browser with live ping, My Servers manager, RCON console support, favorites and quick-connect.</p></div>
+      <div class="card"><div class="ico">&#128100;</div><h3>Microsoft &amp; Offline Accounts</h3><p>Full Microsoft OAuth login plus offline accounts. Skin preview server included. Multiple accounts, instant switching.</p></div>
+      <div class="card"><div class="ico">&#9889;</div><h3>Maximum Performance Mode</h3><p>One toggle: installs the full performance stack (Sodium, Lithium, Entity Culling, FerriteCore, ImmediatelyFast&hellip;) and tuned Aikar-style GC/JIT flags. Conflicting mods are detected and offered for removal.</p></div>
+      <div class="card"><div class="ico">&#128187;</div><h3>Auto-Install on Launch</h3><p>Curate your auto-install list &mdash; Sodium, Iris, BSL, JEI, JourneyMap and more get (re)installed on every launch, always at the correct version.</p></div>
+      <div class="card"><div class="ico">&#128269;</div><h3>Crash Analyzer</h3><p>Reads crash logs, identifies the cause (missing deps, low RAM, mod conflicts) and tells you what to do &mdash; in plain language.</p></div>
+      <div class="card"><div class="ico">&#127918;</div><h3>Instances</h3><p>Unlimited isolated instances per loader &amp; version: Vanilla, Fabric, Forge, NeoForge, OptiFine. Managed Java runtimes, per-instance RAM with a recommended-RAM hint.</p></div>
+      <div class="card"><div class="ico">&#127912;</div><h3>21 Themes + Theme Creator</h3><p>Nebula, Aurora, Crimson&hellip; plus Minecraft classics (Grass Block, Creeper, Diamond, Nether&hellip;). Theme Creator: colors, corner radius, typography &mdash; live preview.</p></div>
+      <div class="card"><div class="ico">&#128049;</div><h3>The Cat</h3><p>Click the logo. A fully hand-coded vector cat fishes, dives, chases Creepers, dodges Endermen, fights Blazes and 13 more scenes &mdash; 18 variants at 240&plus; FPS.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="themes" style="padding-top:20px">
+  <div class="container">
+    <div class="sec-head">
+      <h2>21 themes out of the box</h2>
+      <p>Every pixel is theme-aware &mdash; switch and the entire launcher recolors. Or build your own in Theme Creator.</p>
+    </div>
+    <div class="themes" id="themeRow"></div>
+  </div>
+</section>
+
+<section id="download" class="dl">
+  <div class="container">
+    <div class="sec-head">
+      <h2>Download</h2>
+      <p>The installer always pulls the latest release straight from GitHub &mdash; you never install an outdated build.</p>
+    </div>
+    <div class="dl-card">
+      <h3>Complex Launcher <span id="dlVersion">v32</span></h3>
+      <div class="ver" id="dlStatus">&#9679; Checking GitHub for latest release&hellip;</div>
+      <p>Windows 10/11 &middot; Auto-updating &middot; ~63&nbsp;MB download at install time</p>
+      <div class="os-row">
+        <a class="btn btn-accent btn-lg" id="btnWin" href="assets/Complex-Launcher-Setup.exe" download>&#128189; Windows Installer (.exe)</a>
+        <a class="btn btn-ghost btn-lg" id="btnWinZip" href="https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest" target="_blank" rel="noopener">&#128230; Portable .zip</a>
+      </div>
+      <div class="steps">
+        <div class="step"><b>1 &mdash; Download</b><p>Run the .exe installer. SmartScreen may ask &mdash; click "More info" &rarr; "Run anyway".</p></div>
+        <div class="step"><b>2 &mdash; Auto-setup</b><p>The installer downloads the latest release from GitHub, extracts and installs it.</p></div>
+        <div class="step"><b>3 &mdash; Shortcuts</b><p>Desktop + Start Menu shortcuts are created automatically. Launch and play.</p></div>
+        <div class="step"><b>4 &mdash; Stay updated</b><p>The launcher self-updates in-app afterwards with a crash-safe updater.</p></div>
+      </div>
+    </div>
+    <div class="warn">&#9888;&#65039; The installer is unsigned (code-signing certificates cost money for a free project). Windows SmartScreen shows a one-time warning &mdash; "More info" &rarr; "Run anyway" is safe: the installer only downloads the official release from this project's GitHub.</div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="container">
+    <div class="sec-head"><h2>FAQ</h2></div>
+    <div class="faq">
+      <details><summary>Is Complex Launcher free?</summary><p>Completely. No ads, no telemetry, no account needed. It's a hobby-built launcher distributed freely.</p></details>
+      <details><summary>Why does SmartScreen warn about the installer?</summary><p>The installer is unsigned &mdash; code-signing certificates cost yearly money that a free project can't justify. Click "More info" &rarr; "Run anyway". The installer only downloads the official release zip from the project's GitHub repository.</p></details>
+      <details><summary>Which loaders are supported?</summary><p>Vanilla, Fabric, Forge, NeoForge and OptiFine &mdash; each instance can use a different one, with managed Java runtimes.</p></details>
+      <details><summary>How does the updater work?</summary><p>The launcher checks GitHub on start. Updates download in-app and apply through a crash-safe restart script: it waits for the old process, backs up the jar, copies with size validation, rolls back on mismatch, then relaunches.</p></details>
+      <details><summary>Does it work offline?</summary><p>Yes: offline accounts, cached version manifests and cached mod metadata let you browse and launch with no connection. Downloads obviously need internet.</p></details>
+      <details><summary>Where is the cat?</summary><p>Click the launcher's logo. 18 hand-coded vector scenes &mdash; the cat fishes, dives, gets teleported by Endermen and occasionally explodes with Creepers. All at 240+ FPS.</p></details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div>Complex Launcher &mdash; free Minecraft launcher &middot; v32</div>
+    <div><a href="https://github.com/arddemirkiran-tech/Complex-Launcher" target="_blank" rel="noopener">GitHub</a> &middot; <a href="https://github.com/arddemirkiran-tech/Complex-Launcher/releases" target="_blank" rel="noopener">Releases</a></div>
+    <div>Not affiliated with Mojang or Microsoft. "Minecraft" is a trademark of Mojang Synergies AB.</div>
+  </div>
+</footer>
+
+<script>
+/* ---------- theme chips ---------- */
+const themes=[["Nebula","#8b5cf6"],["Dusk","#c084fc"],["Aurora","#34d399"],["Midnight","#4c6ef5"],["Storm","#64748b"],["Forest","#22c55e"],["Crimson","#ef4444"],["Ember","#fb923c"],["Ocean","#0ea5e9"],["Golden","#eab308"],["Light","#e2e8f0"],["Grass Block","#7cb342"],["Creeper","#4caf50"],["Nether","#b71c1c"],["The End","#111"],["Diamond","#4dd0e1"],["Redstone","#f44336"],["Lapis","#3f51b5"],["Emerald","#00c853"],["Wither","#37474f"],["Slime","#8bc34a"]];
+document.getElementById('themeRow').innerHTML=themes.map(([n,c])=>`<span class="tchip"><span class="sw" style="background:${c}"></span>${n}</span>`).join('');
+
+/* ---------- live version from GitHub ---------- */
+(async()=>{
+  try{
+    const r=await fetch('https://api.github.com/repos/arddemirkiran-tech/Complex-Launcher/releases/latest');
+    const d=await r.json();
+    document.getElementById('dlVersion').textContent=d.tag_name;
+    document.getElementById('dlStatus').innerHTML='&#9679; Latest on GitHub: <b>'+d.tag_name+'</b> &mdash; the installer always fetches this.';
+    document.getElementById('btnWinZip').href=d.html_url;
+  }catch(e){
+    document.getElementById('dlStatus').innerHTML='&#9679; Offline check failed &mdash; installer still fetches the latest at run time.';
+  }
+})();
+
+/* ---------- hero screenshot tabs + gallery click ---------- */
+const heroImg=document.getElementById('heroShot');
+function showShot(src){
+  document.querySelectorAll('.shot-tab').forEach(t=>t.classList.toggle('active', t.dataset.shot===src));
+  heroImg.classList.remove('fade');
+  void heroImg.offsetWidth;
+  heroImg.src=src;
+  heroImg.classList.add('fade');
+  document.getElementById('top').scrollIntoView({behavior:'smooth'});
+}
+document.querySelectorAll('.shot-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>showShot(tab.dataset.shot));
+});
+document.querySelectorAll('#shotGrid .card[data-shot]').forEach(card=>{
+  card.addEventListener('click',()=>showShot(card.dataset.shot));
+});
+</script>
+</body>
+</html>
