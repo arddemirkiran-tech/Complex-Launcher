@@ -1,5 +1,5 @@
 {
-  "version": "34",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v34-Windows.zip",
-  "changelog": "v34: 2nd Client button (multi-launch from Home), fully scrollable Settings tab, theme-creator fonts preview in their own typeface"
+  "version": "35",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v35-Windows.zip",
+  "changelog": "v35: auto-install bug fixed (mods no longer install when their checkbox is OFF), new Modern design mode with animated background effects, Classic mode unchanged. Plus v34 speed & theme fixes."
 }
