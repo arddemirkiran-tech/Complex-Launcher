@@ -1,5 +1,5 @@
 {
-  "version": "33",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v33-Windows.zip",
-  "changelog": "v33: My Servers per-server instances (mods/shaders/RP per server), loader selection fix, Fabric launch fixes (ASM dedup + VulkanMod crash watchdog), v33 core"
+  "version": "34",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v34-Windows.zip",
+  "changelog": "v34: 2nd Client button (multi-launch from Home), fully scrollable Settings tab, theme-creator fonts preview in their own typeface"
 }

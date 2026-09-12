@@ -16,7 +16,7 @@ A next-generation Minecraft launcher focused on robust mod management, real-time
 
 Website: **https://complexlauncher.gt.tc**
 
-## 🆕 What's new in v33
+## 🆕 What's new in v34
 
 - **My Servers: per-server instances** — every server gets its own `Server-<ip>` instance; Mods / Shaders / Resource Packs tabs install **per server**. New **Mods** button on each server card.
 - **Loader selection fixed** — picking Fabric/Forge/NeoForge for a server now actually launches with that loader.
