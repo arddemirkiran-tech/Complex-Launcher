@@ -1,5 +1,5 @@
 {
-  "version": "35",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v35-Windows.zip",
-  "changelog": "v35: auto-install bug fixed (mods no longer install when their checkbox is OFF), new Modern design mode with animated background effects, Classic mode unchanged. Plus v34 speed & theme fixes."
+  "version": "36",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v36-Windows.zip",
+  "changelog": "v36: one-click mod rollback after version switches - if the game crashes with the new mod set, the launcher offers to restore the previous working set. Plus all v35 fixes (auto-install gate, Modern design, FPS optimizer)."
 }
