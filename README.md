@@ -6,6 +6,23 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
+## ⬇️ Download (Latest: v33)
+
+| File | Description |
+|---|---|
+| [`Complex-Launcher-Setup.exe`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-Setup.exe) | Windows installer — auto-downloads the latest release, creates shortcuts, checks Java |
+| [`Complex-Launcher-v33-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v33-Windows.zip) | Portable Windows build (bundled runtime) |
+| [`Complex-Launcher-v33-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v33-Linux.zip) | Portable Linux build |
+
+Website: **https://complexlauncher.gt.tc**
+
+## 🆕 What's new in v33
+
+- **My Servers: per-server instances** — every server gets its own `Server-<ip>` instance; Mods / Shaders / Resource Packs tabs install **per server**. New **Mods** button on each server card.
+- **Loader selection fixed** — picking Fabric/Forge/NeoForge for a server now actually launches with that loader.
+- **Fabric launch fixed (twice)** — coordinate-based library dedup ends the *"duplicate ASM classes"* crash; a new crash watchdog detects VulkanMod renderer crashes, removes the mod and falls back to the stable Sodium renderer automatically.
+- Version bump to **v33** across the launcher, Discord RPC and update checks.
+
 ## 🌟 Key Features
 
 - **Mod & Modpack Management (`ModsPanel`, `ModpacksPanel`)**  

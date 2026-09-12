@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://complexlauncher.gt.tc/sitemap.xml

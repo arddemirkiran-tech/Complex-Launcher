@@ -1,5 +1,5 @@
 {
-  "version": "15",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/download/complex%20launcher/Complex-Launcher-v15.zip",
-  "changelog": "IlkSurum"
+  "version": "33",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v33-Windows.zip",
+  "changelog": "v33: My Servers per-server instances (mods/shaders/RP per server), loader selection fix, Fabric launch fixes (ASM dedup + VulkanMod crash watchdog), v33 core"
 }
