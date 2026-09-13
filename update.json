@@ -1,5 +1,5 @@
 {
-  "version": "38",
+  "version": "39",
   "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v38-Windows.zip",
   "changelog": "v38: home background and account photo now persist across launcher restarts (previously lost on close/reopen), plus all v37 improvements: full-circle account photo, custom logo/home background branding, live theme-creator hover preview, max-performance opt-out gate, wrong-version mod install fix, mod dedupe, Java 17 compatibility."
 }
