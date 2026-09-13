@@ -1,5 +1,5 @@
 {
-  "version": "37",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v37-Windows.zip",
-  "changelog": "v37: account photo now fills the whole avatar circle (big-PNG draw bug fixed), custom logo/home background/account photo branding, live theme-creator preview on hover, max-performance opt-out fix, wrong-version mod install fix, mod dedupe, Java 17 compatibility."
+  "version": "38",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v38-Windows.zip",
+  "changelog": "v38: home background and account photo now persist across launcher restarts (previously lost on close/reopen), plus all v37 improvements: full-circle account photo, custom logo/home background branding, live theme-creator hover preview, max-performance opt-out gate, wrong-version mod install fix, mod dedupe, Java 17 compatibility."
 }
