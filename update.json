@@ -1,5 +1,5 @@
 {
-  "version": "39",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v38-Windows.zip",
-  "changelog": "v38: home background and account photo now persist across launcher restarts (previously lost on close/reopen), plus all v37 improvements: full-circle account photo, custom logo/home background branding, live theme-creator hover preview, max-performance opt-out gate, wrong-version mod install fix, mod dedupe, Java 17 compatibility."
+  "version": "40",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v40-Windows.zip",
+  "changelog": "v40: NEW design themes \u2014 Minecraft world (day: blocky terrain, pixel clouds, floating particles) and Herobrine (haunted: fog, dead trees, glowing eyes appearing in the dark). App-wide background photo (visible on every tab). Design switcher now live. All v39 fixes included: photo egg drag positioning, size up to 400%, logo toggle crash fix, Java 8 agent fix."
 }
