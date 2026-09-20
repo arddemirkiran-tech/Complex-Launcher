@@ -143,18 +143,47 @@ public class ArgumentBuilder {
         return arrayList;
     }
 
+    /**
+     * Deger alan JVM bayraklari: bayrak + deger cift olarak gruplanip
+     * birlikte tekillestirilir. Token bazli dedup bunlari ayri ayri ele
+     * alirdi: Forge 1.17+ profillerinde --add-opens/--add-exports birden
+     * fazla kez gectigi icin IKINCI bayrak "tekrar" sanilip silinir,
+     * degeri (java.base/java.lang.invoke=cpw.mods.securejarhandler)
+     * ortada kalirdi ve java launcher bu token'i main class adi sanip
+     * "Could not find or load main class" ile cokerdi.
+     */
+    private static final java.util.Set<String> VALUE_FLAGS = new java.util.HashSet<>(java.util.Arrays.asList(
+        "--add-opens", "--add-exports", "--add-reads", "--patch-module",
+        "--module-path", "-p", "-cp", "-classpath", "--upgrade-module-path",
+        "--add-modules", "--limit-modules", "--module", "-m",
+        "--enable-native-access", "-Xbootclasspath/a"
+    ));
+
     private static ArrayList<String> dedupeJvmArgs(List<String> args, int mainClassIndex) {
         java.util.LinkedHashSet<String> seen = new java.util.LinkedHashSet<String>();
         ArrayList<String> out = new ArrayList<String>(args.size());
-        for (int i = 0; i < args.size(); ++i) {
+        int i = 0;
+        while (i <= mainClassIndex) {
             String token = args.get(i);
-            if (i <= mainClassIndex) {
-                if (seen.add(token)) {
+            // Cift token'li bayraklar (bayrak + deger): grup anahtarina gore
+            // tekillestir, asla tek basina dusurme.
+            if (i < mainClassIndex && token != null && VALUE_FLAGS.contains(token)) {
+                String value = args.get(i + 1);
+                String group = token + "\u0000" + value;
+                if (seen.add(group)) {
                     out.add(token);
+                    out.add(value);
                 }
-            } else {
+                i += 2;
+                continue;
+            }
+            if (seen.add(token)) {
                 out.add(token);
             }
+            ++i;
+        }
+        for (int j = mainClassIndex + 1; j < args.size(); ++j) {
+            out.add(args.get(j));
         }
         return out;
     }
@@ -200,8 +229,7 @@ public class ArgumentBuilder {
         linkedHashMap.put("clientid", "complex-launcher");
         linkedHashMap.put("auth_xuid", launchContext.session.uuid.replace("-", ""));
         linkedHashMap.put("user_properties", "{}");
-        linkedHashMap.put("natives_directory", launchContext.nativesDir.getAbsolutePath());
-        linkedHashMap.put("launcher_name", "Complex-Launcher");            linkedHashMap.put("launcher_version", "40.0.0");
+        linkedHashMap.put("natives_directory", launchContext.nativesDir.getAbsolutePath());            linkedHashMap.put("launcher_name", "Complex-Launcher");            linkedHashMap.put("launcher_version", "42.0.0");
         linkedHashMap.put("classpath", launchContext.classpath);
         linkedHashMap.put("library_directory", Paths.LIBRARIES_DIR.getAbsolutePath());
         linkedHashMap.put("classpath_separator", File.pathSeparator);
