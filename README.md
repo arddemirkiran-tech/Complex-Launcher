@@ -6,7 +6,7 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
-## ⬇️ Download (Latest: v43)
+## ⬇️ Download (Latest: v44)
 
 | File | Description |
 |---|---|

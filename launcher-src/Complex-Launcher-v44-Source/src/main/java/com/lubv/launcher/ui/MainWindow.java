@@ -7338,6 +7338,19 @@ extends JFrame {
      * ve scroll viewport'lari seffafLANir. Kartlar (buildCard) KORUNUR:
      * kartin kendi animasyonlu gradyani var, onu bozmuyoruz.
      */
+    /**
+     * V44 FIX: FX moduna girerken seffaflastirdigimiz bilesenlerin O ZAMANKI
+     * opaklik degerlerini kaydeder. Build sirasinda bilinçli olarak
+     * setOpaque(false) yapilan ~80 ozel panel (kartlar, gradient paneller,
+     * cleanScroll viewport'lari) vardi; eski makeTabContentOpaque KORLEME
+     * hepsini opaque=true yapinca classic moda donuste goruntu KALICI
+     * bozuluyordu ("arka plan degisince her sey buglaniyor/glitchleniyor").
+     * Artik yalnizca gercekten true->false cevirdiklerimizi kaydedip
+     * geri donuste SADECE onlari eski degerlerine ceviriyoruz.
+     */
+    private static final java.util.Map<javax.swing.JComponent, Boolean> FX_ORIGINAL_OPAQUE =
+        java.util.Collections.synchronizedMap(new java.util.IdentityHashMap<>());
+
     private static void makeTabContentTransparent(java.awt.Container root) {
         if (root == null) {
             return;
@@ -7359,18 +7372,25 @@ extends JFrame {
                     || jc instanceof javax.swing.JTable
                     || jc instanceof javax.swing.JTree
                     || jc instanceof javax.swing.JSpinner
-                    || jc instanceof javax.swing.JPopupMenu
-                    || jc instanceof javax.swing.JComboBox;
-                if (!isInteractive) {
-                    // Kartlar (isOpaque=false override) kendi boyamalarini
-                    // korur; setOpaque(false) onlarda sadece 'düz arkaplan
-                    // doldurma'yi kaplar - görsel kayip yok.
+                    || jc instanceof javax.swing.JPopupMenu;
+                if (!isInteractive && jc.isOpaque()) {
+                    // Yalnizca GERCEKTEN true->false cevirirken kaydet:
+                    // zaten seffaf olanlar (build-time setOpaque(false))
+                    // haritaya girmez, geri donuste dokunulmaz.
+                    FX_ORIGINAL_OPAQUE.put(jc, Boolean.TRUE);
                     jc.setOpaque(false);
                 }
             }
             if (ch instanceof javax.swing.JScrollPane sp) {
-                sp.getViewport().setOpaque(false);
-                sp.setOpaque(false);
+                if (sp.isOpaque()) {
+                    FX_ORIGINAL_OPAQUE.put(sp, Boolean.TRUE);
+                    sp.setOpaque(false);
+                }
+                java.awt.Component vpComp = sp.getViewport();
+                if (vpComp instanceof javax.swing.JComponent vp && vp.isOpaque()) {
+                    FX_ORIGINAL_OPAQUE.put(vp, Boolean.TRUE);
+                    vp.setOpaque(false);
+                }
             }
             if (ch instanceof java.awt.Container c2) {
                 MainWindow.makeTabContentTransparent(c2);
@@ -7384,38 +7404,30 @@ extends JFrame {
      * geri getirir. (FlatLaf UI ile yeniden kurulum yapmadan.) Bilesenin
      * kendi ui degeri korunur; sadece opaklik bayragi eski haline döner.
      */
-    private static void makeTabContentOpaque(java.awt.Container root) {
-        if (root == null) {
-            return;
+    /**
+     * V44 FIX: classic moda donuste SADECE FX'e girerken true->false
+     * cevirdigimiz bilesenleri kaydedilen ORIJINAL degerlerine geri cevirir.
+     * Interaktif bilesenlere ve build-time seffaf yapilan ozel panellere
+     * dokunmaz - eski "hepsini opaque=true yap" korlemesi kartlari/gradient
+     * panelleri bozuyor, tema rengiyle kapliyordu.
+     */
+    private static void makeTabContentOpaque() {
+        java.util.ArrayList<javax.swing.JComponent> keys;
+        synchronized (FX_ORIGINAL_OPAQUE) {
+            keys = new java.util.ArrayList<>(FX_ORIGINAL_OPAQUE.keySet());
         }
-        for (int i = 0; i < root.getComponentCount(); i++) {
-            java.awt.Component ch = root.getComponent(i);
-            if (ch instanceof JComponent jc) {
-                boolean isInteractive = jc instanceof javax.swing.JButton
-                    || jc instanceof javax.swing.JCheckBox
-                    || jc instanceof javax.swing.JComboBox
-                    || jc instanceof javax.swing.JList
-                    || jc instanceof javax.swing.JTextField
-                    || jc instanceof javax.swing.JFormattedTextField
-                    || jc instanceof javax.swing.JTextArea
-                    || jc instanceof javax.swing.JEditorPane
-                    || jc instanceof javax.swing.JProgressBar
-                    || jc instanceof javax.swing.JSlider
-                    || jc instanceof javax.swing.JToggleButton
-                    || jc instanceof javax.swing.JTable
-                    || jc instanceof javax.swing.JTree
-                    || jc instanceof javax.swing.JSpinner
-                    || jc instanceof javax.swing.JPopupMenu;
-                if (!isInteractive) {
-                    jc.setOpaque(true);
+        for (javax.swing.JComponent c : keys) {
+            Boolean orig;
+            synchronized (FX_ORIGINAL_OPAQUE) {
+                orig = FX_ORIGINAL_OPAQUE.remove(c);
+            }
+            if (orig != null && c != null) {
+                try {
+                    c.setOpaque(orig);
                 }
-            }
-            if (ch instanceof javax.swing.JScrollPane sp) {
-                sp.getViewport().setOpaque(true);
-                sp.setOpaque(true);
-            }
-            if (ch instanceof java.awt.Container c2) {
-                MainWindow.makeTabContentOpaque(c2);
+                catch (Exception ignored) {
+                    // bilesen arada Dispose edilmis olabilir
+                }
             }
         }
     }
@@ -7431,6 +7443,15 @@ extends JFrame {
                     if (c != null) {
                         before.put(f.getName(), c);
                     }
+                }
+            }
+            // V44 FIX: eski temanin koyu/acik durumunu not al; tema degisince
+            // FlatLaf LAF'i degistirebilir (FlatDarkLaf <-> FlatLightLaf).
+            javax.swing.UIManager.LookAndFeelInfo lafBefore = null;
+            for (javax.swing.UIManager.LookAndFeelInfo i : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if (i.getClassName().equals(javax.swing.UIManager.getLookAndFeel().getClass().getName())) {
+                    lafBefore = i;
+                    break;
                 }
             }
             // Uygulama komutunu calistir (Theme.apply / applyCustom).
@@ -7482,6 +7503,32 @@ extends JFrame {
                 if (w != this && w.isDisplayable()) {
                     refreshTreeFonts(w);
                 }
+            }
+            // V44 FIX: themeApplyAction Theme.apply() icinde FlatLaf LAF'ini
+            // degistirdiyse (koyu<->acik) UIManager degerleri degismis ama
+            // rethemeTree/updateComponentTreeUI siralamasi eski LAF UI
+            // degerlerini birakabiliyor. LAF degistiyse agaci tek atomik
+            // gecis icin tazele; aksi halde renk haritasiyla devam et.
+            String lafAfter = javax.swing.UIManager.getLookAndFeel() == null
+                ? null : javax.swing.UIManager.getLookAndFeel().getClass().getName();
+            boolean lafChanged = lafBefore != null
+                ? !lafBefore.getClassName().equals(lafAfter)
+                : lafAfter != null;
+            if (lafChanged) {
+                javax.swing.SwingUtilities.updateComponentTreeUI(this);
+                for (java.awt.Window w : java.awt.Window.getWindows()) {
+                    if (w != this && w.isDisplayable()) {
+                        javax.swing.SwingUtilities.updateComponentTreeUI(w);
+                    }
+                }
+            }
+            // V44 FIX: LAF degisimi (koyu<->acik) guncellenen agacta
+            // opakliklari varsayilana dondurur; FX modundeyse seffafligi
+            // YENIDEN uygula ki "gunduz" temaya gecince paneller FX arka
+            // planini ortmesin. (Kayit haritasi isOpaque() kontrolleri
+            // sayesinde idempotent; zaten seffaf olanlara dokunmaz.)
+            if (this.tabs != null && BackgroundFx.isFxMode(this.settings.designMode)) {
+                MainWindow.makeTabContentTransparent(this.tabs);
             }
             this.repaint();
         }
@@ -7692,7 +7739,7 @@ extends JFrame {
             if (fx) {
                 MainWindow.makeTabContentTransparent(this.tabs);
             } else {
-                MainWindow.makeTabContentOpaque(this.tabs);
+                MainWindow.makeTabContentOpaque();
             }
             this.tabs.repaint();
         }
@@ -7736,8 +7783,11 @@ extends JFrame {
         catch (Exception exception) {
             // empty catch block
         }
-        // V35.1: Modern mod tekrar etkinse seffaflik tazele (tema gecisi
-        // bilesenleri eski opakliga dondurebilir).
+        // V35.1: FX mod tekrar etkinse seffaflik tazele (tema gecisi
+        // bilesenleri eski opakliga dondurebilir). V44: classic modda
+        // DOKUNMA — boot her zaman seffaf kurar (app-bg fotorafi her modda
+        // gorunur) ve makeTabContentOpaque yalnizca applyDesignMode
+        // classic gecisinde cagrilmali; tema degisimi opakligi ezmesin.
         if (BackgroundFx.isFxMode(this.settings.designMode) && this.tabs != null) {
             MainWindow.makeTabContentTransparent(this.tabs);
         }

@@ -1,5 +1,5 @@
 {
-  "version": "43",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v43-Windows.zip",
-  "changelog": "v43: Forge 1.17+ launch fix — game crashed with 'Could not find or load main class java.base/java.lang.invoke=...' on Forge 1.20.1 / OptiFine (Forge-based installs). JVM arg dedup dropped repeated --add-opens/--add-exports flags and orphaned their values; flag+value pairs are now deduped atomically. Also includes the v42 classpath fix (universal jar kept on classpath)."
+  "version": "44",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v44-Windows.zip",
+  "changelog": "v44: Theme/design switching glitch fix — switching themes (dark<->light) or design modes could leave panels opaque, covering the animated background, and permanently glitch the UI when returning to Classic. FX transparency changes are now tracked and restored precisely, and LookAndFeel switches are re-synced after a theme change. Also includes v42/v43 Forge & OptiFine launch fixes."
 }
