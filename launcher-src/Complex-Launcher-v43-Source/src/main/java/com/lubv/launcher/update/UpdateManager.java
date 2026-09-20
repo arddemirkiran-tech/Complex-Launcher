@@ -26,7 +26,7 @@ public class UpdateManager {
     private static final String GITHUB_OWNER = "arddemirkiran-tech";
     private static final String GITHUB_REPO = "Complex-Launcher";
     private static final String GITHUB_API_URL = "https://api.github.com/repos/arddemirkiran-tech/Complex-Launcher/releases/latest";
-    public static final String CURRENT_VERSION = "42";
+    public static final String CURRENT_VERSION = "43";
     private static final File UPDATE_DIR = new File(Paths.GAME_DIR, "update");
     private static final File VERSION_FILE = new File(Paths.GAME_DIR, "launcher_version.txt");
     private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");

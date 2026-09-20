@@ -44,7 +44,7 @@ public class ArgumentBuilder {
         arrayList.add("-Djava.library.path=" + launchContext.nativesDir.getAbsolutePath());
         arrayList.add("-Dorg.lwjgl.librarypath=" + launchContext.nativesDir.getAbsolutePath());
         arrayList.add("-Dminecraft.launcher.brand=Complex-Launcher");
-        arrayList.add("-Dminecraft.launcher.version=42.0.0");
+        arrayList.add("-Dminecraft.launcher.version=43.0.0");
         if (OsRules.CURRENT_OS == OsRules.Os.MAC) {
             arrayList.add("-XstartOnFirstThread");
         }
@@ -229,7 +229,7 @@ public class ArgumentBuilder {
         linkedHashMap.put("clientid", "complex-launcher");
         linkedHashMap.put("auth_xuid", launchContext.session.uuid.replace("-", ""));
         linkedHashMap.put("user_properties", "{}");
-        linkedHashMap.put("natives_directory", launchContext.nativesDir.getAbsolutePath());            linkedHashMap.put("launcher_name", "Complex-Launcher");            linkedHashMap.put("launcher_version", "42.0.0");
+        linkedHashMap.put("natives_directory", launchContext.nativesDir.getAbsolutePath());            linkedHashMap.put("launcher_name", "Complex-Launcher");            linkedHashMap.put("launcher_version", "43.0.0");
         linkedHashMap.put("classpath", launchContext.classpath);
         linkedHashMap.put("library_directory", Paths.LIBRARIES_DIR.getAbsolutePath());
         linkedHashMap.put("classpath_separator", File.pathSeparator);
