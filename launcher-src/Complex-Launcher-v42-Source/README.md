@@ -1,4 +1,4 @@
-# Complex Launcher v28 - Source (com.lubv package)
+# Complex Launcher v42 - Source (com.lubv package)
 
 This archive contains the `com.lubv.*` Java source for Complex Launcher,
 reconstructed from the shipped v26 jar via CFR decompilation and then

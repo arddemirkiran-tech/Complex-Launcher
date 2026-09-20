@@ -44,7 +44,7 @@ public class ArgumentBuilder {
         arrayList.add("-Djava.library.path=" + launchContext.nativesDir.getAbsolutePath());
         arrayList.add("-Dorg.lwjgl.librarypath=" + launchContext.nativesDir.getAbsolutePath());
         arrayList.add("-Dminecraft.launcher.brand=Complex-Launcher");
-        arrayList.add("-Dminecraft.launcher.version=32.0.0");
+        arrayList.add("-Dminecraft.launcher.version=42.0.0");
         if (OsRules.CURRENT_OS == OsRules.Os.MAC) {
             arrayList.add("-XstartOnFirstThread");
         }
