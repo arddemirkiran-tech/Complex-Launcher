@@ -6,17 +6,23 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
-## ⬇️ Download (Latest: v44)
+## ⬇️ Download (Latest: v45)
 
 | File | Description |
 |---|---|
 | [`Complex-Launcher-Setup.exe`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-Setup.exe) | Windows installer — auto-downloads the latest release, creates shortcuts, checks Java |
-| [`Complex-Launcher-v36-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v36-Windows.zip) | Portable Windows build (bundled runtime) |
-| [`Complex-Launcher-v36-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v36-Linux.zip) | Portable Linux build |
+| [`Complex-Launcher-v45-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v45-Windows.zip) | Portable Windows build (bundled runtime) |
+| [`Complex-Launcher-v45-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v45-Linux.zip) | Portable Linux build |
 
 Website: **https://complexlauncher.gt.tc**
 
-## 🆕 What's new in v36
+## 🆕 What's new in v45
+
+- **Mods: "Change Version" (`Sürüm Değiştir…`)** — right-click an installed mod and pick another build of *that same mod*. The Minecraft version and loader stay the same; you get a real picker with every compatible build (newest first), the currently installed one marked and pre-selected.
+- **Safe switching** — the chosen build is downloaded with SHA-1 verification, required dependencies are resolved, the registry is updated and the **old jar is deleted**, so two versions of the same mod can never sit in `mods/` together. Picking the version you already have is a no-op, and the entry is disabled for CurseForge / local JAR mods (no resolvable version list).
+- Includes all v36–v44 fixes below.
+
+## 🆕 Also in v36
 
 - **My Servers: per-server instances** — every server gets its own `Server-<ip>` instance; Mods / Shaders / Resource Packs tabs install **per server**. New **Mods** button on each server card.
 - **Loader selection fixed** — picking Fabric/Forge/NeoForge for a server now actually launches with that loader.

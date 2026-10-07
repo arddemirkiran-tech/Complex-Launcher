@@ -1,4 +1,4 @@
-# Complex Launcher v44 - Source (com.lubv package)
+# Complex Launcher v45 - Source (com.lubv package)
 
 This archive contains the `com.lubv.*` Java source for Complex Launcher,
 reconstructed from the shipped v26 jar via CFR decompilation and then
@@ -24,6 +24,29 @@ This is **only** the project's own code. Third-party libraries (Gson,
 FlatLaf, TwelveMonkeys) are not included here - they're pulled in via
 Maven/the classpath at build time and are also already present, compiled,
 inside `Complex-Launcher.jar` in the release ZIPs.
+
+## What's new in v45
+
+### Mods: "Change Version" (`Sürüm Değiştir…`)
+Right-clicking an installed mod now offers **Change Version…** in the
+context menu (`ModsPanel.showInstalledMenu`). It installs another build of
+that *same mod* — the Minecraft version and the loader do not change.
+
+- `ModsPanel.changeSelectedVersion` fetches the project's version list from
+  Modrinth for the **current loader + MC version** on a background thread.
+- `ModsPanel.showVersionPicker` opens a modal picker (`VersionListRenderer`)
+  sorted newest-first, showing version number, release type, date and
+  supported MC versions, with the **currently installed** build marked and
+  pre-selected.
+- `ModsPanel.installChosenVersion` downloads the chosen version through
+  `ModManager.installWithDependencies` (SHA-1 verified download, dependency
+  chain, registry update), then deletes the **old jar** (and its `.disabled`
+  counterpart) so two versions of the same mod can never sit in `mods/`
+  together. It reuses the existing cancel button / progress bar.
+- Picking the version that is already installed is a no-op (no re-download),
+  and the menu entry is disabled for mods that have no Modrinth project id
+  (CurseForge and local JAR installs), since their registry entries carry no
+  resolvable version list.
 
 ## What changed from the original v26 code
 

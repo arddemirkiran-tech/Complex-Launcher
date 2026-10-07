@@ -1,5 +1,5 @@
 {
-  "version": "44",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v44-Windows.zip",
-  "changelog": "v44: Theme/design switching glitch fix — switching themes (dark<->light) or design modes could leave panels opaque, covering the animated background, and permanently glitch the UI when returning to Classic. FX transparency changes are now tracked and restored precisely, and LookAndFeel switches are re-synced after a theme change. Also includes v42/v43 Forge & OptiFine launch fixes."
+  "version": "45",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v45-Windows.zip",
+  "changelog": "v45: Mod version switching - right-click any installed Modrinth mod and choose 'Sürüm Değiştir' to install another build of that mod (same MC version and loader). The version list is fetched live, the installed build is marked, the download is SHA-1 verified, dependencies are resolved and the old jar is removed so two versions never coexist. Includes all v36-v44 fixes."
 }

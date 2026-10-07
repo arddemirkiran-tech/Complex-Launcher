@@ -1186,6 +1186,23 @@ extends JPanel {
         jPopupMenu.setBackground(Theme.BG_ELEVATED);
         jPopupMenu.setBorder(BorderFactory.createLineBorder(Theme.BG_BORDER, 1));
         ModsPanel.addCtx(jPopupMenu, L10n.isEnglish() ? "Toggle Enabled" : "A\u00e7/Kapat", Theme.TEXT_PRIMARY, actionEvent -> this.toggleSelected());
+        // V45 SURUM DEGISTIR: kurulu modu MODUN BASKA bir surumune gecirir.
+        // (MC surumu degismez - ayni MC + yukleyici icin surum listesi acilir.)
+        // Modrinth projesi olmayan (yerel jar / CurseForge) modlarda pasif.
+        ModManager.InstalledMod versionTarget = this.singleSelectedMod();
+        boolean canChangeVersion = versionTarget != null
+            && versionTarget.projectId != null
+            && !versionTarget.projectId.isBlank()
+            && !versionTarget.projectId.startsWith("curseforge:");
+        JMenuItem versionItem = new JMenuItem(L10n.isEnglish() ? "Change Version\u2026" : "S\u00fcr\u00fcm De\u011fi\u015ftir\u2026");
+        versionItem.setBackground(Theme.BG_ELEVATED);
+        versionItem.setForeground(canChangeVersion ? Theme.ACCENT_BRIGHT : Theme.TEXT_MUTED);
+        versionItem.setEnabled(canChangeVersion);
+        versionItem.setToolTipText(canChangeVersion
+            ? (L10n.isEnglish() ? "Install another version of this mod (same MC version / loader)" : "Bu modun ba\u015fka bir s\u00fcr\u00fcm\u00fcn\u00fc kur (MC s\u00fcr\u00fcm\u00fc ve y\u00fckleyici ayn\u0131 kal\u0131r)")
+            : (L10n.isEnglish() ? "Only for Modrinth mods - select exactly one mod" : "Sadece Modrinth modlar\u0131 i\u00e7in - tek bir mod se\u00e7in"));
+        versionItem.addActionListener(actionEvent -> this.changeSelectedVersion(versionTarget));
+        jPopupMenu.add(versionItem);
         // TEMA BUG FIXI: sabit (220,60,60) yerine temanin RED'i.
         ModsPanel.addCtx(jPopupMenu, L10n.isEnglish() ? "Remove Selected" : "Se\u00e7ilenleri Kald\u0131r", Theme.RED != null ? Theme.RED : new Color(220, 60, 60), actionEvent -> this.removeSelected());
         jPopupMenu.addSeparator();
@@ -1204,6 +1221,220 @@ extends JPanel {
             }
         });
         jPopupMenu.show(this.installedList, mouseEvent.getX(), mouseEvent.getY());
+    }
+
+    /** Kurulu listede TEK bir mod seciliyse onu, aksi halde null doner. */
+    private ModManager.InstalledMod singleSelectedMod() {
+        List<Object> list = this.installedList.getSelectedValuesList();
+        if (list.size() != 1 || !(list.get(0) instanceof ModManager.InstalledMod)) {
+            return null;
+        }
+        return (ModManager.InstalledMod)list.get(0);
+    }
+
+    /**
+     * V45 SURUM DEGISTIR: kurulu bir modun AYNI MC surumu + yukleyici icin
+     * baska bir surumunu secme akisi.
+     *   1) Modrinth'ten surum listesi cekilir (arka plan thread).
+     *   2) Surum secme diyalogu acilir (kurulu surum isaretli).
+     *   3) Secilen surum SHA-1 dogrulamali indirilir, bagimliliklar kurulur,
+     *      registry guncellenir ve ESKI jar diskten silinir.
+     * Modrinth proje kimligi olmayan (yerel jar / CurseForge) modlarda calismaz.
+     */
+    private void changeSelectedVersion(ModManager.InstalledMod installedMod) {
+        final boolean en = L10n.isEnglish();
+        if (installedMod == null) {
+            return;
+        }
+        if (installedMod.projectId == null || installedMod.projectId.isBlank()
+                || installedMod.projectId.startsWith("curseforge:")) {
+            this.log.accept(en
+                ? "Version switching is only available for Modrinth mods (this one has no Modrinth project id)."
+                : "S\u00fcr\u00fcm de\u011fi\u015ftirme sadece Modrinth modlar\u0131 i\u00e7in \u00e7al\u0131\u015f\u0131r (bu modun Modrinth proje kimli\u011fi yok).");
+            JOptionPane.showMessageDialog(this,
+                en ? "Version switching works for mods installed from Modrinth.\nCurseForge and local JAR mods have no version list."
+                   : "S\u00fcr\u00fcm de\u011fi\u015ftirme Modrinth'ten kurulan modlar i\u00e7in \u00e7al\u0131\u015f\u0131r.\nCurseForge ve yerel JAR modlar\u0131n\u0131n s\u00fcr\u00fcm listesi yoktur.",
+                en ? "Change Version" : "S\u00fcr\u00fcm De\u011fi\u015ftir", 1);
+            return;
+        }
+        final String loader = this.loaderSupplier.get();
+        final String mc = this.versionSupplier.get();
+        final String title = installedMod.projectTitle != null ? installedMod.projectTitle : installedMod.fileName;
+        this.log.accept((en ? "Loading versions for " : "S\u00fcr\u00fcmler al\u0131n\u0131yor: ") + title + "\u2026 (" + loader + " \u00b7 MC " + mc + ")");
+        this.setProgress(-1, en ? "Loading versions\u2026" : "S\u00fcr\u00fcmler y\u00fckleniyor\u2026");
+        new Thread(() -> {
+            List<ModrinthApi.ModVersion> versions;
+            try {
+                versions = ModrinthApi.getVersions(installedMod.projectId, loader, mc);
+            }
+            catch (Exception exception) {
+                versions = null;
+            }
+            final List<ModrinthApi.ModVersion> fVersions = versions;
+            SwingUtilities.invokeLater(() -> {
+                this.setProgress(0, " ");
+                if (fVersions == null || fVersions.isEmpty()) {
+                    this.log.accept((en ? "No versions found for " : "S\u00fcr\u00fcm bulunamad\u0131: ") + title
+                        + " (" + loader + " \u00b7 MC " + mc + ")");
+                    JOptionPane.showMessageDialog(this, en
+                        ? "No compatible versions found for " + title + " on " + loader + " / MC " + mc + "."
+                        : title + " i\u00e7in " + loader + " / MC " + mc + " uyumlu s\u00fcr\u00fcm bulunamad\u0131.",
+                        en ? "Change Version" : "S\u00fcr\u00fcm De\u011fi\u015ftir", 2);
+                    return;
+                }
+                this.showVersionPicker(installedMod, loader, mc, fVersions);
+            });
+        }, "mod-version-list").start();
+    }
+
+    /** Surum secme diyalogu: kurulu surum isaretli, yeniden eskiye listelenir. */
+    private void showVersionPicker(ModManager.InstalledMod installedMod, String loader, String mc, List<ModrinthApi.ModVersion> versions) {
+        final boolean en = L10n.isEnglish();
+        final String title = installedMod.projectTitle != null ? installedMod.projectTitle : installedMod.fileName;
+        ArrayList<ModrinthApi.ModVersion> sorted = new ArrayList<ModrinthApi.ModVersion>(versions);
+        sorted.sort((a, b) -> Long.compare(b.datePublished, a.datePublished));
+        final JList<ModrinthApi.ModVersion> versionList = new JList<ModrinthApi.ModVersion>(sorted.toArray(new ModrinthApi.ModVersion[0]));
+        versionList.setCellRenderer(new VersionListRenderer(installedMod));
+        versionList.setSelectionMode(0);
+        versionList.setFixedCellHeight(42);
+        versionList.setBackground(Theme.BG_BASE);
+        versionList.setForeground(Theme.TEXT_PRIMARY);
+        int preselect = 0;
+        for (int i = 0; i < sorted.size(); ++i) {
+            ModrinthApi.ModVersion candidate = sorted.get(i);
+            if (candidate.fileName != null && candidate.fileName.equals(installedMod.fileName)) {
+                preselect = i;
+                break;
+            }
+        }
+        versionList.setSelectedIndex(preselect);
+        JScrollPane scrollPane = UiFx.cleanScroll(versionList);
+        scrollPane.setPreferredSize(new Dimension(460, 300));
+        JLabel header = new JLabel("<html>" + (en
+            ? "<b>" + ModsPanel.escapeHtml(title) + "</b> - " + sorted.size() + " versions<br>"
+                + "<font color='#999999'>MC " + ModsPanel.escapeHtml(String.valueOf(mc)) + " \u00b7 " + ModsPanel.escapeHtml(String.valueOf(loader))
+                + " \u00b7 installed: " + ModsPanel.escapeHtml(String.valueOf(installedMod.versionNumber)) + "</font>"
+            : "<b>" + ModsPanel.escapeHtml(title) + "</b> - " + sorted.size() + " s\u00fcr\u00fcm<br>"
+                + "<font color='#999999'>MC " + ModsPanel.escapeHtml(String.valueOf(mc)) + " \u00b7 " + ModsPanel.escapeHtml(String.valueOf(loader))
+                + " \u00b7 kurulu: " + ModsPanel.escapeHtml(String.valueOf(installedMod.versionNumber)) + "</font>")
+            + "</html>");
+        header.setForeground(Theme.TEXT_SECONDARY);
+        JPanel wrap = new JPanel(new BorderLayout(0, 8));
+        wrap.setOpaque(true);
+        wrap.setBackground(Theme.BG_SURFACE);
+        wrap.add((Component)header, "North");
+        wrap.add((Component)scrollPane, "Center");
+        int choice = JOptionPane.showConfirmDialog(this, wrap,
+            (en ? "Change Version - " : "S\u00fcr\u00fcm De\u011fi\u015ftir - ") + title,
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (choice != JOptionPane.OK_OPTION) {
+            return;
+        }
+        ModrinthApi.ModVersion chosen = versionList.getSelectedValue();
+        if (chosen == null) {
+            return;
+        }
+        if (chosen.fileName != null && chosen.fileName.equals(installedMod.fileName)) {
+            this.log.accept((en ? "Already installed: " : "Zaten kurulu: ") + title + " (" + chosen.versionNumber + ")");
+            return;
+        }
+        this.installChosenVersion(installedMod, chosen, loader, mc);
+    }
+
+    /** Secilen surumu kurar: indir + bagimliliklar + registry + eski jar temizligi. */
+    private void installChosenVersion(ModManager.InstalledMod installedMod, ModrinthApi.ModVersion chosen, String loader, String mc) {
+        final boolean en = L10n.isEnglish();
+        final File modsDir = this.modsDirSupplier.get();
+        final String title = installedMod.projectTitle != null ? installedMod.projectTitle : installedMod.fileName;
+        final String oldFileName = installedMod.fileName;
+        final String oldVersion = installedMod.versionNumber;
+        final java.util.concurrent.atomic.AtomicBoolean cancelled = new java.util.concurrent.atomic.AtomicBoolean(false);
+        this.installCancelled = cancelled;
+        this.installWorker = null;
+        if (this.cancelInstallBtn != null) {
+            this.cancelInstallBtn.setEnabled(true);
+        }
+        this.setInstallProgressAsync(-1, (en ? "Switching " : "De\u011fi\u015ftiriliyor: ") + title + " \u2192 " + chosen.versionNumber + "\u2026");
+        new Thread(() -> {
+            this.installWorker = Thread.currentThread();
+            try {
+                ModrinthApi.ModResult project = null;
+                try {
+                    project = ModrinthApi.getProject(installedMod.projectId);
+                }
+                catch (Exception ignored) {
+                    project = null;
+                }
+                if (project == null) {
+                    // Proje detayi alinamazsa registry kaydindan kur (LibraryMod'siz mod).
+                    project = new ModrinthApi.ModResult();
+                    project.id = installedMod.projectId;
+                    project.slug = installedMod.projectId;
+                    project.title = installedMod.projectTitle;
+                    project.iconUrl = installedMod.iconUrl;
+                }
+                ModManager.InstallResult result = ModManager.installWithDependencies(modsDir, project, chosen, loader, mc, (pct, stage) -> {
+                    if (pct >= 0) {
+                        this.setInstallProgressAsync(Math.min(99, pct), stage);
+                    } else {
+                        this.setInstallProgressAsync(-1, stage);
+                    }
+                }, cancelled);
+                // ESKI JAR TEMIZLIGI: kurulum registry kaydini yeni dosyayla
+                // degistirdi; eski jar (veya .disabled hali) diskte kalmasin -
+                // ayni modun iki surumu mods klasorunde durursa oyun patlar.
+                int removed = 0;
+                if (oldFileName != null && !oldFileName.isBlank() && !oldFileName.equals(chosen.fileName)) {
+                    for (String name : new String[]{oldFileName, oldFileName + ".disabled"}) {
+                        File old = new File(modsDir, name);
+                        if (old.isFile() && old.delete()) {
+                            ++removed;
+                        }
+                    }
+                }
+                final int removedCount = removed;
+                SwingUtilities.invokeLater(() -> {
+                    for (String dep : result.installedDependencies) {
+                        this.log.accept("Gerekli mod kuruldu: " + dep);
+                    }
+                    for (String dep : result.skippedDependencies) {
+                        this.log.accept("UYARI - Bagimlilik surumu bulunamadi: " + dep);
+                    }
+                    this.log.accept((en ? "Version changed: " : "S\u00fcr\u00fcm de\u011fi\u015ftirildi: ") + title + " "
+                        + oldVersion + " \u2192 " + chosen.versionNumber
+                        + (removedCount > 0 ? (en ? " (old jar removed)" : " (eski jar silindi)") : ""));
+                    this.setProgress(100, (en ? "Version changed: " : "S\u00fcr\u00fcm: ") + title + " " + chosen.versionNumber);
+                    this.refreshInstalled();
+                    Timer timer = new Timer(2500, actionEvent -> this.setProgress(0, " "));
+                    timer.setRepeats(false);
+                    timer.start();
+                });
+            }
+            catch (Exception exception) {
+                final boolean wasCancelled = cancelled.get();
+                SwingUtilities.invokeLater(() -> {
+                    if (wasCancelled) {
+                        this.log.accept(en ? "Version switch cancelled." : "S\u00fcr\u00fcm de\u011fi\u015ftirme iptal edildi.");
+                        this.setProgress(0, en ? "Cancelled" : "\u0130ptal edildi");
+                    } else {
+                        this.log.accept((en ? "Could not change version: " : "S\u00fcr\u00fcm de\u011fi\u015ftirilemedi: ") + exception.getMessage());
+                        this.setProgress(0, (en ? "Version switch failed: " : "S\u00fcr\u00fcm de\u011fi\u015ftirme ba\u015far\u0131s\u0131z: ") + exception.getMessage());
+                    }
+                    Timer timer = new Timer(4000, actionEvent -> this.setProgress(0, " "));
+                    timer.setRepeats(false);
+                    timer.start();
+                });
+            }
+            finally {
+                this.installCancelled = null;
+                this.installWorker = null;
+                SwingUtilities.invokeLater(() -> {
+                    if (this.cancelInstallBtn != null) {
+                        this.cancelInstallBtn.setEnabled(false);
+                    }
+                });
+            }
+        }, "mod-version-switch").start();
     }
 
     private void showSearchMenu(MouseEvent mouseEvent) {
@@ -1755,6 +1986,74 @@ extends JPanel {
 
     // setSideBodyText + toggleSideBodyTranslation kaldirildi -
     // ceviri artik paylasilan DetailInfoPanel icinde, dil-duyarli calisiyor.
+
+    /**
+     * V45 SURUM DEGISTIR: surum secme listesinin satir cizimi.
+     * Kurulu surum "(kurulu)" olarak isaretlenir; renkler aktif temadan
+     * gelir (sabit renk yok).
+     */
+    private static class VersionListRenderer
+    extends JPanel
+    implements ListCellRenderer<ModrinthApi.ModVersion> {
+        private final JLabel versionLabel = new JLabel();
+        private final JLabel metaLabel = new JLabel();
+        private final ModManager.InstalledMod installed;
+
+        VersionListRenderer(ModManager.InstalledMod installedMod) {
+            this.installed = installedMod;
+            this.setLayout(new GridLayout(2, 1, 0, 2));
+            this.setBorder(new EmptyBorder(6, 10, 6, 10));
+            this.versionLabel.setFont(this.versionLabel.getFont().deriveFont(1, 12.0f));
+            this.metaLabel.setFont(this.metaLabel.getFont().deriveFont(0, 10.0f));
+            this.add((Component)this.versionLabel);
+            this.add((Component)this.metaLabel);
+            this.setOpaque(true);
+        }
+
+        @Override
+        public Component getListCellRendererComponent(JList<? extends ModrinthApi.ModVersion> jList, ModrinthApi.ModVersion modVersion, int n, boolean bl, boolean bl2) {
+            boolean en = L10n.isEnglish();
+            if (modVersion == null) {
+                this.versionLabel.setText("");
+                this.metaLabel.setText("");
+                return this;
+            }
+            boolean current = this.installed != null && modVersion.fileName != null
+                && modVersion.fileName.equals(this.installed.fileName);
+            String versionNumber = modVersion.versionNumber != null && !modVersion.versionNumber.isBlank()
+                ? modVersion.versionNumber
+                : modVersion.fileName;
+            this.versionLabel.setText(versionNumber + (current ? (en ? "   (installed)" : "   (kurulu)") : ""));
+            StringBuilder meta = new StringBuilder();
+            if (modVersion.versionType != null && !modVersion.versionType.isBlank()) {
+                meta.append(modVersion.versionType);
+            }
+            if (modVersion.datePublished > 0L) {
+                if (meta.length() > 0) {
+                    meta.append("   \u00b7   ");
+                }
+                meta.append(java.time.Instant.ofEpochSecond(modVersion.datePublished)
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+            }
+            if (modVersion.gameVersions != null && !modVersion.gameVersions.isEmpty()) {
+                String gv = String.join(", ", modVersion.gameVersions);
+                if (gv.length() > 60) {
+                    gv = gv.substring(0, 60) + "\u2026";
+                }
+                if (meta.length() > 0) {
+                    meta.append("   \u00b7   ");
+                }
+                meta.append("MC ").append(gv);
+            }
+            this.metaLabel.setText(meta.toString());
+            ModsPanel.applyColors(this, bl, this.versionLabel, this.metaLabel, this.metaLabel);
+            if (current) {
+                this.versionLabel.setForeground(bl ? Theme.TEXT_PRIMARY : Theme.GREEN);
+            }
+            return this;
+        }
+    }
 
     private static class SearchResultRenderer
     extends JPanel
