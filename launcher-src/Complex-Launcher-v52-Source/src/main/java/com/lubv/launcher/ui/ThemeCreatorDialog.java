@@ -446,8 +446,15 @@ public class ThemeCreatorDialog extends JDialog {
         JCheckBox advToggle = new JCheckBox(L10n.isEnglish() ? "Advanced colors (edit all 13)" : "Gelismis renkler (13'unu duzenle)");
         advToggle.setOpaque(false);
         advToggle.setForeground(Theme.TEXT_SECONDARY);
-        advToggle.addActionListener(e -> advPanel.setVisible(advToggle.isSelected()));
-        advToggle.addActionListener(e -> pack());
+        // Paleti genisletirken pencereyi pack() ile yeniden boyutlandirmiyoruz:
+        // anlik boyut degisimi + ic ice scroll pane layout'u arayuzu ziplatiyor
+        // ve yarim boyanmis alanlar birakiyordu. Diyalog mevcut boyutunda kalir,
+        // tasan icerik kaydirilabilir alandan gorunur.
+        advToggle.addActionListener(e -> {
+            advPanel.setVisible(advToggle.isSelected());
+            revalidate();
+            repaintTree(this);
+        });
 
         JPanel leftWrap = new JPanel(new BorderLayout(0, 8));
         leftWrap.setOpaque(false);
@@ -637,17 +644,7 @@ public class ThemeCreatorDialog extends JDialog {
             // sirasinda kopyalanan renkler (setForeground(Theme.X) vb.)
             // kimlik eslestirmesiyle yenileriyle degistirilir. Boylece
             // "tema sadece bir kismi boyuyor" sorunu ozel temalarda da olmaz.
-            if (getOwner() instanceof MainWindow mw) {
-                mw.applyThemeLive(() -> Theme.applyCustom(draft));
-                javax.swing.SwingUtilities.updateComponentTreeUI(mw);
-                mw.refreshThemeChrome();
-            } else {
-                Theme.applyCustom(draft);
-            }
-            // Tema degisiminden sonra hem launcher hem diyalog agacini tam
-            // boya: yarim kalan boyama "dupelenmis" panellere yol aciyordu.
-            repaintTree(getOwner());
-            repaintTree(this);
+            applyLive(draft);
         });
 
         JButton randomBtn = UiFx.ghostButton(L10n.isEnglish() ? "\uD83C\uDFB2 Randomize" : "\uD83C\uDFB2 Rastgele");
@@ -720,28 +717,41 @@ public class ThemeCreatorDialog extends JDialog {
     private void loadPreset(String name) {
         if (name == null) return;
         try {
-            // Preset'i canli olarak tum launcher'a yansit, renklerini
-            // taslagi al, sonra draft temaya geri don.
-            if (getOwner() instanceof MainWindow mw) {
-                mw.applyThemeByName(name);
-            } else {
-                Theme.apply(name);
-            }
+            endHoverPreview();
+            // Preset yalnizca RENK KAYNAGI olarak kullanilir. Eskiden once
+            // preset launcher'a uygulaniyor, sonra taslak geri yukleniyordu;
+            // yani tek tikta iki tam tema gecisi + iki updateComponentTreeUI
+            // oluyor ve renk paleti degisirken GUI titriyor/bozuluyordu.
+            // Simdi Theme statikleri preset'e alinip aninda taslaga donulur;
+            // launcher'in kendisi bu sirada yeniden kurulmaz.
+            Theme.apply(Theme.Preset.fromName(name));
             CustomTheme loaded = CustomTheme.snapshotFromCurrent();
             loaded.name = draft.name;                // kullanicinin ismini koru
-            Theme.applyCustom(draft);                // draft'a geri don
-            if (getOwner() instanceof MainWindow mw2) {
-                mw2.applyThemeLive(() -> Theme.applyCustom(draft));
-                javax.swing.SwingUtilities.updateComponentTreeUI(mw2);
-                mw2.refreshThemeChrome();
-            }
+            Theme.applyCustom(draft);                // taslak paletine geri don
             draft = loaded;
             refreshAll();
-            repaintTree(getOwner());
+            revalidate();
             repaintTree(this);
         } catch (Exception ex) {
             // preset yuklenemediyse sessizce devam
         }
+    }
+
+    /** Verilen temayi launcher'a canli uygular ve iki agaci da temiz boyar.
+     *  Burada updateComponentTreeUI CAGRILMAZ: applyThemeLive LAF degistiginde
+     *  agaci zaten yeniden kuruyor; ikinci kez kurmak renk paleti degisiminde
+     *  arayuzu yeniden insa edip titremeye/bozulmaya yol aciyordu. */
+    private void applyLive(CustomTheme theme) {
+        if (getOwner() instanceof MainWindow mw) {
+            mw.applyThemeLive(() -> Theme.applyCustom(theme));
+            mw.refreshThemeChrome();
+            mw.revalidate();
+        } else {
+            Theme.applyCustom(theme);
+        }
+        revalidate();
+        repaintTree(getOwner());
+        repaintTree(this);
     }
 
     private void saveAndApply() {
@@ -755,13 +765,9 @@ public class ThemeCreatorDialog extends JDialog {
             return;
         }
         saved = true;
+        applyLive(draft);
         if (getOwner() instanceof MainWindow mw) {
-            mw.applyThemeLive(() -> Theme.applyCustom(draft));
-            javax.swing.SwingUtilities.updateComponentTreeUI(mw);
             mw.onCustomThemeApplied();
-            mw.refreshThemeChrome();
-        } else {
-            Theme.applyCustom(draft);
         }
         refreshAll();
         repaintTree(getOwner());
@@ -776,13 +782,7 @@ public class ThemeCreatorDialog extends JDialog {
         endHoverPreview();
         if (!saved) {
             // Kaydedilmediyse launcher'i acilistaki temaya geri dondur.
-            if (getOwner() instanceof MainWindow mw) {
-                mw.applyThemeLive(() -> Theme.applyCustom(original));
-                javax.swing.SwingUtilities.updateComponentTreeUI(mw);
-                mw.refreshThemeChrome();
-            } else {
-                Theme.applyCustom(original);
-            }
+            applyLive(original);
         }
         dispose();
     }

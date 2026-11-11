@@ -2390,7 +2390,12 @@ extends JFrame {
             this.settings.save();
             this.applyThemeLive(() -> Theme.apply(preset));
             this.refreshThemeChrome();
-            SwingUtilities.updateComponentTreeUI(this);
+            // applyThemeLive zaten renkleri eslestirip LAF degistiginde agaci
+            // yeniden kuruyor. Burada ikinci kez updateComponentTreeUI cagirmak
+            // palet degisiminde tum arayuzu yeniden insa edip titremeye ve
+            // yarim boyanmis ("glitch") goruntuye yol aciyordu.
+            this.revalidate();
+            this.repaint();
         });
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = ++n3;
