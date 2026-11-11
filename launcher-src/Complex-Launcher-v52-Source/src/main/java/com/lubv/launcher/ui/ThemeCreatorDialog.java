@@ -51,6 +51,13 @@ public class ThemeCreatorDialog extends JDialog {
     private final CustomTheme original;
     private boolean saved = false;
 
+    // Yazı tipi / ağırlık hover önizlemesi: draft'a DOKUNMADAN yalnızca
+    // maket üzerinde geçici olarak uygulanır, fare çıkınca kendiliğinden
+    // eski haline döner.
+    private String hoverFontFamily = null;   // "" = varsayılan aile
+    private int hoverHeadingWeight = -1;     // -1 = hover yok
+    private int hoverButtonWeight = -1;
+
     private final List<SwatchRow> coreRows = new ArrayList<>();
     private final List<SwatchRow> allRows = new ArrayList<>();
     private PreviewPanel preview;
@@ -84,10 +91,24 @@ public class ThemeCreatorDialog extends JDialog {
         } else {
             this.draft = CustomTheme.snapshotFromCurrent();
         }
+        // Diyalog penceresi OPAK olmali: aksi halde tema degisiminde launcher'in
+        // eski pikselleri arkadan sizar ve ekranda "dupelenmis/bozuk" gorunur.
+        setBackground(Theme.BG_BASE);
+        getRootPane().setOpaque(true);
         buildUi();
         pack();
         setSize(Math.max(880, getWidth()), Math.max(640, getHeight()));
         setLocationRelativeTo(owner);
+        // Ilk acilista pencere buyutmesinden sonra tum agaci bir kez temiz
+        // boya; yarim kalan boyama eski pencere icerigini birakiyordu.
+        validate();
+        repaint();
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            if (isShowing()) {
+                validate();
+                repaintTree(ThemeCreatorDialog.this);
+            }
+        });
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
@@ -145,7 +166,19 @@ public class ThemeCreatorDialog extends JDialog {
                 }
                 @Override
                 public void mouseExited(java.awt.event.MouseEvent e) {
-                    endHoverPreview();
+                    // Fare satir icindeki hex alanina/butona girdiginde de
+                    // exit gelir. Kisa bir gecikmeyle bak: isaretci hala bu
+                    // satirin (veya alt bilesenlerinin) uzerindeyse onizleme
+                    // devam eder, gercekten ciktiysa eski renge doner.
+                    javax.swing.Timer t = new javax.swing.Timer(60, ev -> {
+                        ((javax.swing.Timer) ev.getSource()).stop();
+                        if (hoverApplied && field.equals(hoverField)
+                                && getMousePosition(true) == null) {
+                            endHoverPreview();
+                        }
+                    });
+                    t.setRepeats(false);
+                    t.start();
                 }
             });
             JLabel name = UiFx.label(fieldLabel(labelKey));
@@ -283,8 +316,31 @@ public class ThemeCreatorDialog extends JDialog {
 
     /** Tema taslagina gore yazı tipi (aile + boyut + stil). */
     private Font fontFor(float size, int style) {
-        String fam = draft.fontFamily != null && !draft.fontFamily.isBlank() ? draft.fontFamily : "Dialog";
+        String fam;
+        if (hoverFontFamily != null) {
+            fam = hoverFontFamily.isBlank() ? "Dialog" : hoverFontFamily;
+        } else {
+            fam = draft.fontFamily != null && !draft.fontFamily.isBlank() ? draft.fontFamily : "Dialog";
+        }
         return new Font(fam, style, Math.max(9, Math.round(size)));
+    }
+
+    /** Maketin kullandigi baslik/düğme agirligi (hover varsa onu). */
+    private int previewHeadingWeight() {
+        return hoverHeadingWeight >= 0 ? hoverHeadingWeight : draft.headingWeight;
+    }
+
+    private int previewButtonWeight() {
+        return hoverButtonWeight >= 0 ? hoverButtonWeight : draft.buttonWeight;
+    }
+
+    /** Agactaki tum bilesenleri tam boya (kismi boyama kalintilarini siler). */
+    private static void repaintTree(java.awt.Component c) {
+        if (c == null) return;
+        c.repaint();
+        if (c instanceof java.awt.Container cn) {
+            for (java.awt.Component ch : cn.getComponents()) repaintTree(ch);
+        }
     }
 
     private String fieldLabel(String key) {
@@ -318,6 +374,8 @@ public class ThemeCreatorDialog extends JDialog {
                 g2.dispose();
             }
         };
+        root.setOpaque(true);
+        root.setBackground(Theme.BG_BASE);
         root.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
 
         // --- Ust serit: isim + preset yukleme ---
@@ -472,6 +530,18 @@ public class ThemeCreatorDialog extends JDialog {
             fontCombo.setFont(new Font(draft.fontFamily != null && !draft.fontFamily.isBlank() ? draft.fontFamily : "Dialog", Font.PLAIN, 13));
             if (preview != null) preview.repaint();
         });
+        // Hover onizleme: acilir listede bir yazi tipinin uzerine gelince
+        // maket o yazi tipiyle boyanir; secmeden/cikmadan kalici degisiklik
+        // olmaz. Tiklayinca normal action listener devreye girer.
+        installComboHover(fontCombo, idx -> {
+            hoverFontFamily = idx <= 0 ? "" : CustomTheme.FONT_CHOICES[idx];
+            if (fontSample != null) fontSample.setFont(fontFor(draft.fontSize + 2.0f, Font.PLAIN));
+            if (preview != null) preview.repaint();
+        }, () -> {
+            hoverFontFamily = null;
+            if (fontSample != null) fontSample.setFont(fontFor(draft.fontSize + 2.0f, Font.PLAIN));
+            if (preview != null) preview.repaint();
+        });
         JPanel fontCol = new JPanel(new java.awt.GridLayout(2, 1, 0, 2));
         fontCol.setOpaque(false);
         fontCol.add(fontCombo);
@@ -506,6 +576,13 @@ public class ThemeCreatorDialog extends JDialog {
             draft.headingWeight = headingCombo.getSelectedIndex();
             if (preview != null) preview.repaint();
         });
+        installComboHover(headingCombo, idx -> {
+            hoverHeadingWeight = idx;
+            if (preview != null) preview.repaint();
+        }, () -> {
+            hoverHeadingWeight = -1;
+            if (preview != null) preview.repaint();
+        });
         hRow.add(headingCombo, "Center");
         shapePanel.add(hRow, gs);
         gs.gridy++;
@@ -521,6 +598,13 @@ public class ThemeCreatorDialog extends JDialog {
         buttonCombo.setSelectedIndex(draft.buttonWeight == 1 ? 1 : 0);
         buttonCombo.addActionListener(e -> {
             draft.buttonWeight = buttonCombo.getSelectedIndex();
+            if (preview != null) preview.repaint();
+        });
+        installComboHover(buttonCombo, idx -> {
+            hoverButtonWeight = idx;
+            if (preview != null) preview.repaint();
+        }, () -> {
+            hoverButtonWeight = -1;
             if (preview != null) preview.repaint();
         });
         bRow.add(buttonCombo, "Center");
@@ -560,6 +644,10 @@ public class ThemeCreatorDialog extends JDialog {
             } else {
                 Theme.applyCustom(draft);
             }
+            // Tema degisiminden sonra hem launcher hem diyalog agacini tam
+            // boya: yarim kalan boyama "dupelenmis" panellere yol aciyordu.
+            repaintTree(getOwner());
+            repaintTree(this);
         });
 
         JButton randomBtn = UiFx.ghostButton(L10n.isEnglish() ? "\uD83C\uDFB2 Randomize" : "\uD83C\uDFB2 Rastgele");
@@ -620,6 +708,10 @@ public class ThemeCreatorDialog extends JDialog {
             javax.swing.JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
             javax.swing.JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scroller.setBorder(null);
+        scroller.setOpaque(true);
+        scroller.setBackground(Theme.BG_BASE);
+        scroller.getViewport().setOpaque(true);
+        scroller.getViewport().setBackground(Theme.BG_BASE);
         scroller.getVerticalScrollBar().setUnitIncrement(16);
         setContentPane(scroller);
         refreshAll();
@@ -645,12 +737,15 @@ public class ThemeCreatorDialog extends JDialog {
             }
             draft = loaded;
             refreshAll();
+            repaintTree(getOwner());
+            repaintTree(this);
         } catch (Exception ex) {
             // preset yuklenemediyse sessizce devam
         }
     }
 
     private void saveAndApply() {
+        endHoverPreview();
         draft.name = nameField.getText().trim();
         if (draft.name.isEmpty()) draft.name = "My Theme";
         if (!draft.save()) {
@@ -669,12 +764,16 @@ public class ThemeCreatorDialog extends JDialog {
             Theme.applyCustom(draft);
         }
         refreshAll();
+        repaintTree(getOwner());
+        repaintTree(this);
         JOptionPane.showMessageDialog(this,
             L10n.isEnglish() ? "Theme saved and applied.\nIt will load on every startup." : "Tema kaydedildi ve uygulandi.\nHer acilista yuklenecek.",
             L10n.isEnglish() ? "Saved" : "Kaydedildi", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void closeAndRestore() {
+        // Yarim kalmis hover onizlemesi pencere kapanirken kaliciya donmesin.
+        endHoverPreview();
         if (!saved) {
             // Kaydedilmediyse launcher'i acilistaki temaya geri dondur.
             if (getOwner() instanceof MainWindow mw) {
@@ -730,9 +829,73 @@ public class ThemeCreatorDialog extends JDialog {
      *  PLAY butonu ve log alani. */
     /* ------------ V36.1 canli hover onizleme ------------ */
 
+    /** Acilir listenin satir uzerine gelince onizleme callback'i kurar.
+     *  Popup her acildiginda liste yeniden bulunur; kapaninca geri alinir. */
+    private void installComboHover(javax.swing.JComboBox<String> combo,
+                                   java.util.function.IntConsumer onHover,
+                                   Runnable onEnd) {
+        combo.addPopupMenuListener(new javax.swing.event.PopupMenuListener() {
+            private javax.swing.JList<?> list;
+            private java.awt.event.MouseMotionListener motion;
+            private java.awt.event.MouseListener exit;
+            private int last = -2;
+
+            private void attach() {
+                list = popupList(combo);
+                if (list == null) return;
+                last = -2;
+                motion = new java.awt.event.MouseMotionAdapter() {
+                    @Override public void mouseMoved(java.awt.event.MouseEvent e) {
+                        int idx = list.locationToIndex(e.getPoint());
+                        if (idx < 0) return;
+                        java.awt.Rectangle b = list.getCellBounds(idx, idx);
+                        if (b == null || !b.contains(e.getPoint())) return;
+                        if (idx == last) return;
+                        last = idx;
+                        onHover.accept(idx);
+                    }
+                };
+                exit = new java.awt.event.MouseAdapter() {
+                    @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                        last = -2;
+                        onEnd.run();
+                    }
+                };
+                list.addMouseMotionListener(motion);
+                list.addMouseListener(exit);
+            }
+
+            private void detach() {
+                if (list != null) {
+                    if (motion != null) list.removeMouseMotionListener(motion);
+                    if (exit != null) list.removeMouseListener(exit);
+                }
+                list = null;
+                motion = null;
+                exit = null;
+                last = -2;
+            }
+
+            @Override public void popupMenuWillBecomeVisible(javax.swing.event.PopupMenuEvent e) { attach(); }
+            @Override public void popupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent e) { detach(); onEnd.run(); }
+            @Override public void popupMenuCanceled(javax.swing.event.PopupMenuEvent e) { detach(); onEnd.run(); }
+        });
+    }
+
+    private static javax.swing.JList<?> popupList(javax.swing.JComboBox<?> combo) {
+        try {
+            javax.accessibility.Accessible ac = combo.getUI().getAccessibleChild(combo, 0);
+            if (ac instanceof javax.swing.plaf.basic.ComboPopup cp) return cp.getList();
+        } catch (Throwable ignored) {
+            // popup erisilemezse hover onizleme sessizce kapali kalir
+        }
+        return null;
+    }
+
     /** Hover edilen rengi onizlemeye gecici olarak uygula. */
     private void hoverPreview(String field) {
         if (hoverApplied || field == null || field.isBlank()) return;
+        hoverField = field;
         if (hoverSaved == null) {
             hoverSaved = new java.util.HashMap<>();
             for (SwatchRow r : allRows) {
@@ -763,11 +926,17 @@ public class ThemeCreatorDialog extends JDialog {
             draft.light = this.hoverLightBefore; // LAF modunu geri al
             this.hoverLightBefore = null;
         }
+        // Renk alanlarini da geri yaz: yalnizca preview'i boyamak hex
+        // kutularini hover renginde birakiyordu (bozuk/dupelenmis gorunum).
+        for (SwatchRow r : allRows) r.refresh();
         if (preview != null) preview.repaint();
         hoverApplied = false;
+        hoverField = null;
     }
 
     private boolean hoverApplied = false;
+    /** Su an hover ile onizlenen renk alani (gecikmeli exit kontrolu icin). */
+    private String hoverField = null;
     private java.util.Map<String, Color> hoverSaved;
     /** Hover sirasinda kaydedilen draft.light (LAF flip'onlemi). */
     private java.lang.Boolean hoverLightBefore = null;
@@ -816,7 +985,7 @@ public class ThemeCreatorDialog extends JDialog {
             g2.fillRoundRect(0, 0, w, 30, 14, 14);
             g2.fillRect(0, 15, w, 15);
             g2.setColor(draft.textPrimaryColor());
-            g2.setFont(fontFor(12f, draft.headingWeight == 1 ? Font.BOLD : Font.PLAIN));
+            g2.setFont(fontFor(12f, previewHeadingWeight() == 1 ? Font.BOLD : Font.PLAIN));
             String previewTitle = draft.name == null || draft.name.isBlank() ? "Complex Launcher" : draft.name;
             g2.drawString(previewTitle, 12, 20);
             g2.setColor(draft.textMutedColor());
@@ -853,7 +1022,7 @@ public class ThemeCreatorDialog extends JDialog {
             g2.setFont(g2.getFont().deriveFont(Font.BOLD, 15f));
             g2.drawString("M", cx + 24, sy + 46);
             g2.setColor(draft.textPrimaryColor());
-            g2.setFont(fontFor(13f, draft.headingWeight == 1 ? Font.BOLD : Font.PLAIN));
+            g2.setFont(fontFor(13f, previewHeadingWeight() == 1 ? Font.BOLD : Font.PLAIN));
             g2.drawString(L10n.isEnglish() ? "My Instance" : "Instance'im", cx + 74, sy + 26);
             g2.setColor(draft.textSecondaryColor());
             g2.setFont(fontFor(11f, Font.PLAIN));
@@ -875,7 +1044,7 @@ public class ThemeCreatorDialog extends JDialog {
                 f2.dispose();
             }
             g2.setColor(Color.WHITE);
-            g2.setFont(fontFor(13f, draft.buttonWeight == 1 ? Font.BOLD : Font.PLAIN));
+            g2.setFont(fontFor(13f, previewButtonWeight() == 1 ? Font.BOLD : Font.PLAIN));
             g2.drawString("\u25B6 " + (L10n.isEnglish() ? "PLAY" : "OYNA"), cx + 42, sy + 130);
 
             // ikincil butonlar - ayni tema yuvarlakligi ile
@@ -884,7 +1053,7 @@ public class ThemeCreatorDialog extends JDialog {
             g2.fillRoundRect(cx + 140, sy + 110, 76, 30, sArc * 2 >= 30 ? 30 : sArc * 2, sArc * 2 >= 30 ? 30 : sArc * 2);
             g2.setColor(draft.textSecondaryColor());
             g2.drawRoundRect(cx + 140, sy + 110, 76, 30, sArc * 2 >= 30 ? 30 : sArc * 2, sArc * 2 >= 30 ? 30 : sArc * 2);
-            g2.setFont(fontFor(12f, draft.buttonWeight == 1 ? Font.BOLD : Font.PLAIN));
+            g2.setFont(fontFor(12f, previewButtonWeight() == 1 ? Font.BOLD : Font.PLAIN));
             g2.drawString(L10n.isEnglish() ? "Mods" : "Modlar", cx + 158, sy + 130);
             g2.setColor(draft.bgElevatedColor());
             g2.fillRoundRect(cx + 224, sy + 110, 76, 30, sArc * 2 >= 30 ? 30 : sArc * 2, sArc * 2 >= 30 ? 30 : sArc * 2);

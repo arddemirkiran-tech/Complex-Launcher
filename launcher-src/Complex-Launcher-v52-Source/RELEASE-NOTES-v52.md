@@ -1,5 +1,22 @@
 # Complex Launcher v52
 
+## Tema Oluşturucu düzeltmesi (v52.2)
+
+- Diyalog penceresi ve iç kaydırma alanı artık **opak**: tema uygulanırken
+altındaki launcher pikselleri sızıp "çift/bozuk" görüntü oluşturmuyor.
+Pencere ilk açıldığında ve boyutlandığında tüm ağaç bir kez temiz boyanıyor.
+- Tema uygulandıktan sonra hem launcher hem Tema Oluşturucu ağacı tamamen
+yeniden boyanıyor; yarım kalan boyama kalıntıları siliniyor.
+- Renk satırı hover önizlemesi fare alt bileşene geçince kesilmiyor ve
+fare çıkınca hex kutuları da gerçek renge geri dönüyor (önceki sürümde
+kutular hover renginde kalabiliyordu).
+- **Yazı tipi ve ağırlık hover önizlemesi eklendi:** yazı tipi listesinde bir
+ailenin, Başlık/Düğme listesinde Normal/Kalın seçeneğinin üzerine gelince
+sağdaki canlı maket anında o yazı tipi/kalınlıkla boyanıyor. Seçim
+yapılmadan çıkınca kendiliğinden eski haline dönüyor. Hover sırasında taslak
+renkler/font değerleri kalıcı olarak değiştirilmiyor.
+- Tema Oluşturucu kapatılırken yarım kalmış hover durumu geri alınıyor.
+
 ## v52.1 ek düzeltme: ana sayfa donması ve konsol duplike görüntüsü
 
 Önceki v52 yapısında ana sayfa donuk kalıyor, konsolda yazı seçerken veya
