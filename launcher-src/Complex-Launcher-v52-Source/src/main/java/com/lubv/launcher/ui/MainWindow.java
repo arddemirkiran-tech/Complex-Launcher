@@ -1880,7 +1880,10 @@ extends JFrame {
         this.logArea = new JTextArea();
         this.logArea.setEditable(false);
         this.logArea.setFont(new Font("Consolas", 0, 10));
-        this.logArea.setBackground(new Color(0, 0, 0, 0));
+        // v52.1: opak zemin sart. Seffaf arka planla JTextArea eski
+        // pikselleri temizlemiyor -> secim/yeni log satirlari ust uste biniyor.
+        this.logArea.setOpaque(true);
+        this.logArea.setBackground(Theme.BG_ELEVATED);
         this.logArea.setForeground(Theme.TEXT_MUTED);
         this.logArea.setBorder(new EmptyBorder(6, 10, 6, 10));
         this.logArea.setRows(3);
@@ -2203,12 +2206,29 @@ extends JFrame {
         // ---------- KONSOL ----------
         this.logArea.setEditable(false);
         this.logArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-        this.logArea.setBackground(new Color(0, 0, 0, 0));
+        // v52.1 DUPLIKE/GHOST FIX: seffaf (alpha 0) arka plan, opaque
+        // JTextArea'nin kendi alanini temizlemesini engelliyordu; secim
+        // yapinca veya yeni log satiri gelince yazi eski piksellerin uzerine
+        // biniyor, konsolun alt kismi "duplike" gorunuyordu. Artik kartla
+        // ayni opak renk kullaniliyor.
+        this.logArea.setOpaque(true);
+        this.logArea.setBackground(Theme.BG_ELEVATED);
         this.logArea.setForeground(Theme.TEXT_SECONDARY);
         this.logArea.setLineWrap(true);
         JComponent logScroll = UiFx.cleanScroll(this.logArea);
         logScroll.setPreferredSize(new Dimension(0, 150));
-        JPanel consoleCard = Cards.card(en ? "Console" : "Konsol", logScroll);
+        // Opak sarmalayici: konsol icindeki secim/scroll repaint'i en yakin
+        // opak ataya (bu panele) kadar sinirlanir. Aksi halde tum pencere
+        // yeniden ciziliyor ve ana sayfa secerken donuyordu.
+        JPanel logBody = new JPanel(new BorderLayout());
+        logBody.setOpaque(true);
+        logBody.setBackground(Theme.BG_ELEVATED);
+        // FX modunda makeTabContentTransparent tum opak panelleri seffaf
+        // yapiyor; bu panel OPAK KALMALI ki konsol secimi tum pencereyi
+        // yeniden cizmesin.
+        logBody.putClientProperty("ComplexFx.keepOpaque", Boolean.TRUE);
+        logBody.add(logScroll, BorderLayout.CENTER);
+        JPanel consoleCard = Cards.card(en ? "Console" : "Konsol", logBody);
 
         JPanel center = new JPanel(new GridBagLayout());
         center.setOpaque(false);
@@ -2221,6 +2241,18 @@ extends JFrame {
         g.gridy = 2; g.weighty = 1.0; g.insets = new Insets(0, 0, 0, 0);
         center.add(consoleCard, g);
         root.add(center, BorderLayout.CENTER);
+        // v52.1 HIZLI TAZELEME: Ana sayfa gorunurken 30 FPS tazeleme.
+        // Onceki surumde dongu tamamen kaldirilinca (classic tasarimda)
+        // sayfa donuk kaliyordu. FX modunda BackgroundFx zaten root pane'i
+        // 30 FPS yeniliyor; ikinci bir timer eklemek tearing/glitch
+        // yaratiyordu. Bu yuzden dongu YALNIZCA FX calismiyorken calisir.
+        Timer homeRefresh = new Timer(33, ev -> {
+            if (homeRoot.isShowing() && !BackgroundFx.isRunning()) {
+                homeRoot.repaint();
+            }
+        });
+        homeRefresh.setInitialDelay(0);
+        homeRefresh.start();
         return root;
     }
 
@@ -7709,7 +7741,8 @@ extends JFrame {
                     || jc instanceof javax.swing.JTree
                     || jc instanceof javax.swing.JSpinner
                     || jc instanceof javax.swing.JPopupMenu;
-                if (!isInteractive && jc.isOpaque()) {
+                boolean keepOpaque = Boolean.TRUE.equals(jc.getClientProperty("ComplexFx.keepOpaque"));
+                if (!isInteractive && !keepOpaque && jc.isOpaque()) {
                     // Yalnizca GERCEKTEN true->false cevirirken kaydet:
                     // zaten seffaf olanlar (build-time setOpaque(false))
                     // haritaya girmez, geri donuste dokunulmaz.

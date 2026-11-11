@@ -1,5 +1,5 @@
 {
   "version": "52",
   "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v52-Windows.zip",
-  "changelog": "v52: Sidebar sekmeleri artik tek tikla aciliyor (press tabanli secim). Ana sayfa glitch'i giderildi: gereksiz 25 FPS tam sayfa repaint timer'i ve 500 ms'lik revalidate/layout kaldirildi, butonlarda basinca metin de zeminle birlikte olcekleniyor. Tema Olusturucu: 22 gercek preset, yazilabilir hex renk alanlari, canli tema adi, Kapat dugmesi, calisan yagan-fotograf bolumu. Setup EXE'de secilen dil artik launcher'in ilk acilis dilini belirliyor (setup-lang.txt); launcher icinden sonradan yapilan secim korunur."
+  "changelog": "v52: Sidebar sekmeleri artik tek tikla aciliyor (press tabanli secim). Ana sayfa donmasi ve konsol duplike goruntusu giderildi: seffaf konsol artik opak zeminde ciziliyor, secim/log kaydirma tum pencereyi yeniden cizmiyor; ana sayfa 30 FPS tazeleniyor, FX modunda ikinci timer calismiyor. Butonlarda basinca metin de zeminle birlikte olcekleniyor. Tema Olusturucu: 22 gercek preset, yazilabilir hex renk alanlari, canli tema adi, Kapat dugmesi, calisan yagan-fotograf bolumu. Setup EXE'de secilen dil artik launcher'in ilk acilis dilini belirliyor (setup-lang.txt); launcher icinden sonradan yapilan secim korunur."
 }

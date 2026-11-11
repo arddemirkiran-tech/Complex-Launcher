@@ -1,5 +1,22 @@
 # Complex Launcher v52
 
+## v52.1 ek düzeltme: ana sayfa donması ve konsol duplike görüntüsü
+
+Önceki v52 yapısında ana sayfa donuk kalıyor, konsolda yazı seçerken veya
+log akarken alt kısım duplike görünüyordu. İki kök neden vardı:
+
+- Konsol `JTextArea`'sı **tamamen şeffaf** (alpha 0) arka planla `opaque`
+  bırakılmıştı. Swing böyle bir bileşende eski pikselleri temizlemediği için
+  seçim vurgusu ve yeni log satırları eskilerin üzerine biniyordu. Konsol artık
+  kartla aynı **opak** renkte (`Theme.BG_ELEVATED`) çiziliyor.
+- Konsolun kaydırma/viewport zinciri tamamen şeffaf olduğu için her seçim ve
+  otomatik kaydırma **tüm pencereyi** yeniden çiziyordu; bu da ana sayfayı
+  donduruyordu. Konsolun etrafına opak bir sarmalayıcı eklendi (FX modunda
+  şeffaflaştırılmıyor), böylece yeniden çizim yalnızca konsol alanında kalıyor.
+- Ana sayfa için 30 FPS hızlı tazeleme geri getirildi. FX tasarım modunda
+  `BackgroundFx` zaten root pane'i 30 FPS yenilediği için ikinci timer
+  çalışmıyor; çift timer kaynaklı tearing/glitch oluşmuyor.
+
 ## Sekme tıklaması: tek tık yeterli
 
 Sol menüdeki sekmeler `mouseClicked` ile dinleniyordu; Swing bu olayı yalnızca
