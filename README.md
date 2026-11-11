@@ -6,15 +6,23 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
-## ⬇️ Download (Latest: v45)
+## ⬇️ Download (Latest: v52)
 
 | File | Description |
 |---|---|
 | [`Complex-Launcher-Setup.exe`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-Setup.exe) | Windows installer — auto-downloads the latest release, creates shortcuts, checks Java |
-| [`Complex-Launcher-v45-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v45-Windows.zip) | Portable Windows build (bundled runtime) |
-| [`Complex-Launcher-v45-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v45-Linux.zip) | Portable Linux build |
+| [`Complex-Launcher-v52-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v52-Windows.zip) | Portable Windows build (bundled runtime) |
+| [`Complex-Launcher-v52-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v52-Linux.zip) | Portable Linux build |
 
 Website: **https://complexlauncher.gt.tc**
+
+## 🆕 What's new in v52
+
+- **One-click sidebar tabs** — tab selection now happens on mouse press instead of click, so a tab never needs a second press when the pointer drifts or the window was just activated. Release still works as a fallback; no double switching.
+- **Home page glitch fixed** — removed a leftover 25 FPS full-page repaint timer (it painted nothing after the redesign) and stopped the hero chips from calling `revalidate()` every 500 ms even when their text was unchanged. Press animations on accent/ghost/danger/launch buttons now scale the text together with the background instead of letting it spill outside the button.
+- **Theme Creator** — the preset list now comes from the real 22 themes (the old hardcoded list silently fell back to Nebula), every one of the 13 colors has an editable hex field, the theme name is bound live, Randomize keeps your name, a Close button restores the previous theme, and the falling-photos section actually appears.
+- **Installer language reaches the launcher** — the language picked in the Setup EXE (`%LOCALAPPDATA%\ComplexLauncher\setup-lang.txt`) now sets the launcher language on first run. A later change inside the launcher wins; re-running Setup with another language applies the new choice.
+- Version bump to **v52** across the launcher and update checks.
 
 ## 🆕 What's new in v45
 

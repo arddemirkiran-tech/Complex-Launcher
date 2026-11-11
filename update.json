@@ -1,5 +1,5 @@
 {
-  "version": "45",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v45-Windows.zip",
-  "changelog": "v45: Mod version switching - right-click any installed Modrinth mod and choose 'Sürüm Değiştir' to install another build of that mod (same MC version and loader). The version list is fetched live, the installed build is marked, the download is SHA-1 verified, dependencies are resolved and the old jar is removed so two versions never coexist. Includes all v36-v44 fixes."
+  "version": "52",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v52-Windows.zip",
+  "changelog": "v52: Sidebar sekmeleri artik tek tikla aciliyor (press tabanli secim). Ana sayfa glitch'i giderildi: gereksiz 25 FPS tam sayfa repaint timer'i ve 500 ms'lik revalidate/layout kaldirildi, butonlarda basinca metin de zeminle birlikte olcekleniyor. Tema Olusturucu: 22 gercek preset, yazilabilir hex renk alanlari, canli tema adi, Kapat dugmesi, calisan yagan-fotograf bolumu. Setup EXE'de secilen dil artik launcher'in ilk acilis dilini belirliyor (setup-lang.txt); launcher icinden sonradan yapilan secim korunur."
 }
