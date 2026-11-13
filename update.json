@@ -1,5 +1,5 @@
 {
-  "version": "53",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v53-Windows.zip",
-  "changelog": "v53: Ana sayfa hero karti artik tum dikey alani kaplamiyor; dogal yuksekliginde kaliyor ve kalan alan oyun ayarlari kartina gidiyor (dengeli iki sutun). Oyun acilisi hizlandirildi: Minecraft/Fabric/Forge/NeoForge JSON lari once yerel onbellekten okunuyor, Java secimi ve surum tespiti java-select.properties dosyasinda saklaniyor, kutuphane JAR lari .libs-ready, assetler .ready ve native dosyalar .natives-ready isaretleriyle sicak acilista dogrulama/hash atliyor. Konsola [Hiz] Launcher hazirligi ... ms satiri yaziliyor. Ikinci ve sonraki acilislarda launcher tarafi ~1 saniyede tamamlanir."
+  "version": "54",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v54-Windows.zip",
+  "changelog": "v54: Turkce karakterler duzeltildi. Paketlenen Space Grotesk ve Bricolage Grotesque, latin + latin-ext alt kumeleri ayni aile adini paylastigi icin Java latin yuzunu seciyor ve s/g/i harfleri eksik glif (ekranda ?) olarak ciziliyordu. Her yazi tipi artik tek birlesik dosya (720 ve 476 glif, tam Latin + Latin Extended) ve ayri aile adiyla (Complex Space Grotesk, Complex Bricolage) geliyor; BrandFonts bir yuzu ASCII + C G I O S U c g i o s u karakterlerini cizebildigini dogrulamadan kaydetmiyor. v53'un dengeli ana sayfa ve ~1 saniyelik acilis hazirligi iyilestirmeleri dahildir."
 }

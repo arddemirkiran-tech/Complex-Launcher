@@ -6,15 +6,21 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
-## ⬇️ Download (Latest: v53)
+## ⬇️ Download (Latest: v54)
 
 | File | Description |
 |---|---|
 | [`Complex-Launcher-Setup.exe`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-Setup.exe) | Windows installer — auto-downloads the latest release, creates shortcuts, checks Java |
-| [`Complex-Launcher-v53-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v53-Windows.zip) | Portable Windows build (bundled runtime) |
-| [`Complex-Launcher-v53-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v53-Linux.zip) | Portable Linux build |
+| [`Complex-Launcher-v54-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v54-Windows.zip) | Portable Windows build (bundled runtime) |
+| [`Complex-Launcher-v54-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v54-Linux.zip) | Portable Linux build |
 
 Website: **https://complexlauncher.gt.tc**
+
+## 🆕 What's new in v54
+
+- **Turkish characters fixed** — the bundled Space Grotesk and Bricolage Grotesque files were Google-Fonts *subsets* (latin + latin-ext) that shared one family name. Java resolved the family to the latin face, which has no `ş`/`ğ`/`İ`/`ı` glyphs, so those letters were drawn with the missing-glyph glyph (a `?` on screen). Each typeface is now a single merged face (720 and 476 glyphs, full Latin + Latin Extended) under a dedicated family name (`Complex Space Grotesk`, `Complex Bricolage`), and `BrandFonts` refuses to register a face unless it can draw ASCII plus `ÇĞİÖŞÜçğıöşü`, falling back to a system font otherwise.
+- Includes all v53 improvements (balanced home hero, ~1 s launch preparation).
+- Version bump to **v54** across the launcher and update checks.
 
 ## 🆕 What's new in v53
 

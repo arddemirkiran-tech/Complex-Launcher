@@ -16,14 +16,19 @@ import java.util.List;
 
 public final class BrandFonts {
     private static final String DIR = "/com/lubv/launcher/ui/fonts/";
+    /* v53: the old bundle shipped the Google-Fonts *subsets* (latin and
+       latin-ext) as separate files that shared one family name. Java picked
+       the latin face, which has no ş/ğ/İ/ı glyphs, so Turkish text was drawn with the
+       .notdef glyph - the "?" users saw. Each file below is the two subsets
+       merged into a single face with full Latin + Latin Extended coverage. */
     private static final String[] FILES = new String[]{
-        "BricolageGrotesque-latin.ttf",
-        "BricolageGrotesque-latin-ext.ttf",
-        "SpaceGrotesk-500.ttf",
-        "SpaceGrotesk-500-ext.ttf",
-        "SpaceGrotesk-700.ttf",
-        "SpaceGrotesk-700-ext.ttf"
+        "SpaceGrotesk-Medium.ttf",
+        "BricolageGrotesque-ExtraBold.ttf"
     };
+    /** Characters every bundled face must be able to draw. */
+    private static final String REQUIRED =
+        "ABCabc0123.,:!?-_/()[]'\"#%&*+=<>|~@ "
+        + "\u00c7\u011e\u0130\u00d6\u015e\u00dc\u00e7\u011f\u0131\u00f6\u015f\u00fc";
 
     private static String body;
     private static String display;
@@ -46,6 +51,9 @@ public final class BrandFonts {
                     continue;
                 }
                 Font font = Font.createFont(Font.TRUETYPE_FONT, in);
+                if (font.canDisplayUpTo(REQUIRED) != -1) {
+                    continue; // a face without Turkish glyphs must never win
+                }
                 ge.registerFont(font);
                 registered.add(font);
             }
@@ -65,6 +73,14 @@ public final class BrandFonts {
             if (body == null && lower.contains("space grotesk")) {
                 body = family;
             }
+        }
+        // A family name can still resolve to a different installed face on
+        // some systems; only accept it when it really covers our characters.
+        if (display != null && new Font(display, Font.PLAIN, 12).canDisplayUpTo(REQUIRED) != -1) {
+            display = null;
+        }
+        if (body != null && new Font(body, Font.PLAIN, 12).canDisplayUpTo(REQUIRED) != -1) {
+            body = null;
         }
     }
 
