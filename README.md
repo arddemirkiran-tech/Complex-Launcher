@@ -6,15 +6,24 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
-## ⬇️ Download (Latest: v55)
+## ⬇️ Download (Latest: v56)
 
 | File | Description |
 |---|---|
 | [`Complex-Launcher-Setup.exe`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-Setup.exe) | Windows installer — auto-downloads the latest release, creates shortcuts, checks Java |
-| [`Complex-Launcher-v55-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v55-Windows.zip) | Portable Windows build (bundled runtime) |
-| [`Complex-Launcher-v55-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v55-Linux.zip) | Portable Linux build |
+| [`Complex-Launcher-v56-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v56-Windows.zip) | Portable Windows build (bundled runtime) |
+| [`Complex-Launcher-v56-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v56-Linux.zip) | Portable Linux build |
 
 Website: **https://complexlauncher.gt.tc**
+
+## 🆕 What's new in v56
+
+- **~50 ms launch preparation on every loader** — measured on 1.20.1: Forge 49 ms, Fabric 58 ms (version JSON 31-33 ms, Java check 5-6 ms, loader profile 5-15 ms, natives 3-4 ms, assets 2-3 ms). Three repeated costs were removed:
+  - the library marker is now **per loader** (`.libs-ready-vanilla` / `-fabric` / `-forge`), so switching loaders no longer re-hashes ~60 MB / 79 JARs every time (measured 108 ms);
+  - the 23 MB client JAR is no longer SHA-1 hashed on every launch (measured 16-67 ms) — a size+mtime fingerprint in `.client-ready` covers it;
+  - the mod compatibility scan behind Maximum Performance is cached in `mods/.compat-ready` and skipped entirely while the mod set is unchanged (22 jars: 51 ms cold, 8 ms warm; seconds with 100+ mods).
+- **Per-stage timing logs** — the console now prints `[Hız] Sürüm bilgisi: 31 ms`, `[Hız] Loader (Forge): 5 ms`, `[Hız] Kütüphaneler`, `[Hız] Natives`, `[Hız] Kaynaklar` and the total, so the prep time of each loader is visible instead of guessed.
+- Version bump to **v56** across the launcher and update checks.
 
 ## 🆕 What's new in v55
 

@@ -183,6 +183,30 @@ public class GameLauncher {
         }
     }
 
+    /** v56: bir hazirlik asamasinin suresini "[Hız] ... ms" olarak yazar. */
+    private static long logStage(ProgressCallback callback, long since, String label) {
+        long now = System.currentTimeMillis();
+        callback.onLog("[H\u0131z] " + label + ": " + (now - since) + " ms");
+        return now;
+    }
+
+    /** v56: mods/ klasorunun icerik parmak izi (loader + ad/boyut/mtime). */
+    private static String modsFingerprint(File modsDir, String loader) {
+        StringBuilder sb = new StringBuilder(loader == null || loader.isBlank() ? "vanilla" : loader);
+        File[] files = modsDir != null ? modsDir.listFiles() : null;
+        if (files != null) {
+            java.util.Arrays.sort(files, java.util.Comparator.comparing(File::getName));
+            for (File f : files) {
+                String name = f.getName();
+                if (!f.isFile() || name.startsWith(".")) continue;
+                String lower = name.toLowerCase(java.util.Locale.ROOT);
+                if (!lower.endsWith(".jar") && !lower.endsWith(".jar.disabled")) continue;
+                sb.append('|').append(name).append(':').append(f.length()).append(':').append(f.lastModified());
+            }
+        }
+        return sb.toString();
+    }
+
     private static Process launchInner(VersionManifest versionManifest, String string, String string2, MinecraftSession minecraftSession, int n3, String string3, String string4, String string5, String string6, File file, ProgressCallback progressCallback, final PrintWriter printWriter) throws Exception {
         final ProgressCallback progressCallback2 = progressCallback;
         final ProgressCallback progressCallback3 = new ProgressCallback(){
@@ -209,6 +233,9 @@ public class GameLauncher {
         };
         Paths.ensureAll();
         final long prepStart = System.currentTimeMillis();
+        // v56: hazirligin her asamasi loglanir - hangi loader'da ne kadar
+        // sure harcandigi "[Hız]" satirlarindan okunur.
+        long hizMark = prepStart;
         progressCallback3.onLog("S\u00fcr\u00fcm bilgisi al\u0131n\u0131yor: " + string);
         progressCallback3.onProgress(2, "S\u00fcr\u00fcm bilgisi al\u0131n\u0131yor");
         VersionManifest.Entry entry = versionManifest.find(string);
@@ -220,6 +247,7 @@ public class GameLauncher {
             throw new Exception("S\u00fcr\u00fcm bulunamad\u0131: " + string);
         }
         GameVersion gameVersion = GameVersion.parse(string, entry.url);
+        hizMark = GameLauncher.logStage(progressCallback3, hizMark, "S\u00fcr\u00fcm bilgisi");
         progressCallback3.onProgress(8, "Temel s\u00fcr\u00fcm ayr\u0131\u015ft\u0131r\u0131ld\u0131");
         progressCallback3.onLog("Java kontrol ediliyor...");
         progressCallback3.onProgress(8, "Java kontrol ediliyor");
@@ -241,6 +269,7 @@ public class GameLauncher {
         if (n4 > 0 && n4 < gameVersion.javaMajorVersion) {
             progressCallback3.onLog("Se\u00e7ilen Java bu s\u00fcr\u00fcm i\u00e7in eski olabilir.");
         }
+        hizMark = GameLauncher.logStage(progressCallback3, hizMark, "Java kontrol\u00fc");
         // v51: Vulcan Mode kaldırıldı. Launcher hiçbir şeyi kendi başına
         // indirmiyor/kurumuyor; yüklenecek loader instance'ın kendi loader'ıdır.
         String effectiveLoader = string2;
@@ -307,6 +336,7 @@ public class GameLauncher {
                 progressCallback3.onLog("OptiFine olmadan orijinal s\u00fcr\u00fcmle devam ediliyor...");
             }
         }
+        hizMark = GameLauncher.logStage(progressCallback3, hizMark, "Loader (" + (effectiveLoader == null || effectiveLoader.isBlank() ? "Vanilla" : effectiveLoader) + ")");
         progressCallback3.onLog("Minecraft istemci JAR'\u0131 kontrol ediliyor...");
         progressCallback3.onProgress(18, "\u0130stemci JAR indiriliyor");
         File clientJarFile = gameVersion.clientJarFile();
@@ -315,9 +345,36 @@ public class GameLauncher {
         try {
             com.lubv.launcher.core.Settings perfSettings = com.lubv.launcher.core.Settings.load();
             if (perfSettings != null && perfSettings.maxPerformanceMode) {
-                int pruned = com.lubv.launcher.mods.ModCompatibility.prune(new File(file, "mods"), effectiveLoader, progressCallback3::onLog);
-                if (pruned > 0) {
-                    progressCallback3.onLog(pruned + " uyumsuz mod kaldirildi - oyun acilabilir.");
+                // v56 HIZ: uyumluluk taramasi her mod JAR'ini acip metadata
+                // okuyor (100+ modda 1-3 s). Artik mods/ klasorunun
+                // ad+boyut+mtime parmak izi .compat-ready isaretinde tutulur;
+                // mod seti degismediyse tarama tamamen atlanir.
+                File compatModsDir = new File(file, "mods");
+                File compatMarker = new File(compatModsDir, ".compat-ready");
+                String compatFp = modsFingerprint(compatModsDir, effectiveLoader);
+                String savedCompat = null;
+                try {
+                    savedCompat = new String(java.nio.file.Files.readAllBytes(compatMarker.toPath()), java.nio.charset.StandardCharsets.UTF_8).trim();
+                }
+                catch (Exception ignored) {
+                    // isaret yok -> tara
+                }
+                if (compatFp.equals(savedCompat)) {
+                    progressCallback3.onLog("  Uyumluluk kontrolu \u00f6nbellekten do\u011fruland\u0131");
+                }
+                else {
+                    int pruned = com.lubv.launcher.mods.ModCompatibility.prune(compatModsDir, effectiveLoader, progressCallback3::onLog);
+                    if (pruned > 0) {
+                        progressCallback3.onLog(pruned + " uyumsuz mod kaldirildi - oyun acilabilir.");
+                    }
+                    try {
+                        compatModsDir.mkdirs();
+                        java.nio.file.Files.write(compatMarker.toPath(),
+                            modsFingerprint(compatModsDir, effectiveLoader).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    }
+                    catch (Exception ignored) {
+                        // isaret yazilamazsa bir sonraki acilis yine tarar
+                    }
                 }
             }
         }
@@ -329,11 +386,34 @@ public class GameLauncher {
         // Artik JAR arka planda inerken kutuphaneler ayni anda iner - iki ag
         // yuku bindiginden toplam hazirlik suresi kisalir (bant genisligi
         // genellikle RTT'ye gore boldur, paralel akis doldurur).
+        // v56 HIZ: istemci JAR 25MB+ ve her acilista SHA-1 ile bastan
+        // okunuyordu (~200-400 ms disk). Artik boyut+mtime parmak izi
+        // .client-ready isaretinde tutulur; iz ayniysa hash atlanir.
         final java.util.concurrent.atomic.AtomicReference<Exception> clientJarError = new java.util.concurrent.atomic.AtomicReference<Exception>();
         Thread clientJarThread = null;
         if (clientJarFile != null) {
             clientJarFile.getParentFile().mkdirs();
-            if (!HttpUtil.sha1Matches(clientJarFile, gameVersion.clientJarSha1)) {
+            File clientMarker = new File(Paths.VERSIONS_DIR, string + "/.client-ready");
+            String clientFp = clientJarFile.length() + ":" + clientJarFile.lastModified() + ":" + gameVersion.clientJarSha1;
+            boolean clientOk = false;
+            if (clientJarFile.isFile() && clientJarFile.length() > 0) {
+                try {
+                    clientOk = clientFp.equals(new String(java.nio.file.Files.readAllBytes(clientMarker.toPath()), java.nio.charset.StandardCharsets.UTF_8).trim());
+                }
+                catch (Exception ignored) {
+                    // isaret yok/bozuk -> hash ile dogrula
+                }
+                if (!clientOk && HttpUtil.sha1Matches(clientJarFile, gameVersion.clientJarSha1)) {
+                    clientOk = true;
+                    try {
+                        java.nio.file.Files.write(clientMarker.toPath(), clientFp.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    }
+                    catch (Exception ignored) {
+                        // isaret yazilamazsa sadece hiz kazanci kacar
+                    }
+                }
+            }
+            if (!clientOk) {
                 progressCallback3.onLog("\u0130stemci JAR indiriliyor...");
                 final String cjUrl = gameVersion.clientJarUrl;
                 final File cjDest = clientJarFile;
@@ -386,7 +466,13 @@ public class GameLauncher {
         // disk okumasi, saniyeler). Artik dosyalarin ad+boyut+mtime
         // parmak izi .libs-ready marker'inda tutulur; iz ayniysa dogrulama
         // tamamen atlanir ve dosyalar dogrudan preVerified sayilir.
-        File libsMarker = new File(Paths.VERSIONS_DIR, string + "/.libs-ready");
+        // v56 HIZ: isaret artik loader'a ozel. Ayni MC surumu icin Vanilla /
+        // Fabric / Forge arasinda gecis yapildiginda parmak izi degisiyor ve
+        // ~400 JAR her seferinde bastan SHA-1 ile dogrulaniyordu; ayri
+        // isaret dosyalari bu tekrari kaldirir ("her loader icin 1 sn").
+        String libsTag = effectiveLoader == null || effectiveLoader.isBlank()
+            ? "vanilla" : effectiveLoader.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]", "");
+        File libsMarker = new File(Paths.VERSIONS_DIR, string + "/.libs-ready-" + libsTag);
         StringBuilder libsFp = new StringBuilder(effectiveLoader).append('|').append(string).append('|').append(arrayList.size()).append('|');
         boolean allLibsPresent = true;
         for (GameVersion.LibraryEntry le : arrayList) {
@@ -507,6 +593,7 @@ public class GameLauncher {
             }
         }
         progressCallback3.onLog("K\u00fct\u00fcphaneler haz\u0131r");
+        hizMark = GameLauncher.logStage(progressCallback3, hizMark, "K\u00fct\u00fcphaneler");
         // V34.8: paralel client JAR indirmesini bekle. Hata varsa gercek
         // indirme akisi gibi launch'i dusur (sessizce yarim jar birakma).
         if (clientJarThread != null) {
@@ -526,6 +613,7 @@ public class GameLauncher {
         progressCallback3.onProgress(50, "Native dosyalar haz\u0131rlan\u0131yor");
         File file4 = NativesExtractor.extract(gameVersion, arrayList, progressCallback3::onLog);
         progressCallback3.onLog("Native dosyalar haz\u0131r");
+        hizMark = GameLauncher.logStage(progressCallback3, hizMark, "Natives");
         progressCallback3.onLog("Oyun kaynaklar\u0131 indiriliyor...");
         progressCallback3.onProgress(55, "Kaynaklar indiriliyor");
         AssetDownloader.download(gameVersion, (n, n2) -> {
@@ -533,6 +621,7 @@ public class GameLauncher {
             progressCallback3.onProgress(Math.min(n3b, 90), "Kaynaklar indiriliyor (" + n + "/" + n2 + ")");
         });
         progressCallback3.onLog("Kaynaklar haz\u0131r");
+        hizMark = GameLauncher.logStage(progressCallback3, hizMark, "Kaynaklar");
         StringBuilder stringBuilder = new StringBuilder();
         if (clientJarFile != null) {
             stringBuilder.append(clientJarFile.getAbsolutePath());
