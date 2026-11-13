@@ -40,8 +40,8 @@ public class ModrinthApi {
             ModResult r = new ModResult();
             r.id = hit.get("project_id").getAsString();
             r.slug = hit.get("slug").getAsString();
-            r.title = hit.get("title").getAsString();
-            r.description = hit.has("description") ? hit.get("description").getAsString() : "";
+            r.title = com.lubv.launcher.ui.BrandFonts.safe(hit.get("title").getAsString());
+            r.description = com.lubv.launcher.ui.BrandFonts.safe(hit.has("description") ? hit.get("description").getAsString() : "");
             r.iconUrl = hit.has("icon_url") && !hit.get("icon_url").isJsonNull() ? hit.get("icon_url").getAsString() : null;
             int n = r.downloads = hit.has("downloads") ? hit.get("downloads").getAsInt() : 0;
             if (hit.has("categories")) {
@@ -75,8 +75,8 @@ public class ModrinthApi {
             ModResult r = new ModResult();
             r.id = hit.get("project_id").getAsString();
             r.slug = hit.get("slug").getAsString();
-            r.title = hit.get("title").getAsString();
-            r.description = hit.has("description") ? hit.get("description").getAsString() : "";
+            r.title = com.lubv.launcher.ui.BrandFonts.safe(hit.get("title").getAsString());
+            r.description = com.lubv.launcher.ui.BrandFonts.safe(hit.has("description") ? hit.get("description").getAsString() : "");
             r.iconUrl = hit.has("icon_url") && !hit.get("icon_url").isJsonNull() ? hit.get("icon_url").getAsString() : null;
             int n = r.downloads = hit.has("downloads") ? hit.get("downloads").getAsInt() : 0;
             if (hit.has("categories")) {
@@ -100,8 +100,8 @@ public class ModrinthApi {
             ModResult r = new ModResult();
             r.id = hit.get("project_id").getAsString();
             r.slug = hit.get("slug").getAsString();
-            r.title = hit.get("title").getAsString();
-            r.description = hit.has("description") ? hit.get("description").getAsString() : "";
+            r.title = com.lubv.launcher.ui.BrandFonts.safe(hit.get("title").getAsString());
+            r.description = com.lubv.launcher.ui.BrandFonts.safe(hit.has("description") ? hit.get("description").getAsString() : "");
             r.iconUrl = hit.has("icon_url") && !hit.get("icon_url").isJsonNull() ? hit.get("icon_url").getAsString() : null;
             r.downloads = hit.has("downloads") ? hit.get("downloads").getAsInt() : 0;
             results.add(r);
@@ -119,8 +119,8 @@ public class ModrinthApi {
             ModResult r = new ModResult();
             r.id = hit.get("project_id").getAsString();
             r.slug = hit.get("slug").getAsString();
-            r.title = hit.get("title").getAsString();
-            r.description = hit.has("description") ? hit.get("description").getAsString() : "";
+            r.title = com.lubv.launcher.ui.BrandFonts.safe(hit.get("title").getAsString());
+            r.description = com.lubv.launcher.ui.BrandFonts.safe(hit.has("description") ? hit.get("description").getAsString() : "");
             r.iconUrl = hit.has("icon_url") && !hit.get("icon_url").isJsonNull() ? hit.get("icon_url").getAsString() : null;
             int n = r.downloads = hit.has("downloads") ? hit.get("downloads").getAsInt() : 0;
             if (hit.has("categories")) {
@@ -144,8 +144,8 @@ public class ModrinthApi {
             ModResult r = new ModResult();
             r.id = hit.get("project_id").getAsString();
             r.slug = hit.get("slug").getAsString();
-            r.title = hit.get("title").getAsString();
-            r.description = hit.has("description") ? hit.get("description").getAsString() : "";
+            r.title = com.lubv.launcher.ui.BrandFonts.safe(hit.get("title").getAsString());
+            r.description = com.lubv.launcher.ui.BrandFonts.safe(hit.has("description") ? hit.get("description").getAsString() : "");
             r.iconUrl = hit.has("icon_url") && !hit.get("icon_url").isJsonNull() ? hit.get("icon_url").getAsString() : null;
             r.downloads = hit.has("downloads") ? hit.get("downloads").getAsInt() : 0;
             results.add(r);
@@ -445,8 +445,8 @@ public class ModrinthApi {
             ModResult r = new ModResult();
             r.id = resp.get("id").getAsString();
             r.slug = resp.has("slug") ? resp.get("slug").getAsString() : "";
-            r.title = resp.get("title").getAsString();
-            r.description = resp.has("description") ? resp.get("description").getAsString() : "";
+            r.title = com.lubv.launcher.ui.BrandFonts.safe(resp.get("title").getAsString());
+            r.description = com.lubv.launcher.ui.BrandFonts.safe(resp.has("description") ? resp.get("description").getAsString() : "");
             r.iconUrl = resp.has("icon_url") && !resp.get("icon_url").isJsonNull() ? resp.get("icon_url").getAsString() : null;
             int n = r.downloads = resp.has("downloads") ? resp.get("downloads").getAsInt() : 0;
             if (resp.has("categories")) {

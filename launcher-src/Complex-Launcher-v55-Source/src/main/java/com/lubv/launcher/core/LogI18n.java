@@ -125,7 +125,7 @@ public final class LogI18n {
         {"  ! Native indirilemedi/çıkarılamadı: ", "  ! Native could not be downloaded/extracted: "},
         {"  Native dosyalar guncel, cikarma atlandi (hizli acilis)", "  Native files up to date, extraction skipped (fast start)"},
         {"  Ayrı native JAR bulunamadı, client JAR taranıyor...", "  No separate native JAR found, scanning client JAR..."},
-        {"  ⚠ Hiç native dosya çıkarılamadı — oyun çalışmayabilir", "  ⚠ No native files extracted — the game may not run"},
+        {"  Hiç native dosya çıkarılamadı — oyun çalışmayabilir", "  No native files extracted — the game may not run"},
         // --- Mod otomasyonu ---
         {"HATA: modsDir=null", "ERROR: modsDir=null"},
         {"HATA: loader=null", "ERROR: loader=null"},

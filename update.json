@@ -1,5 +1,5 @@
-{
-  "version": "54",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v54-Windows.zip",
-  "changelog": "v54: Turkce karakterler duzeltildi. Paketlenen Space Grotesk ve Bricolage Grotesque, latin + latin-ext alt kumeleri ayni aile adini paylastigi icin Java latin yuzunu seciyor ve s/g/i harfleri eksik glif (ekranda ?) olarak ciziliyordu. Her yazi tipi artik tek birlesik dosya (720 ve 476 glif, tam Latin + Latin Extended) ve ayri aile adiyla (Complex Space Grotesk, Complex Bricolage) geliyor; BrandFonts bir yuzu ASCII + C G I O S U c g i o s u karakterlerini cizebildigini dogrulamadan kaydetmiyor. v53'un dengeli ana sayfa ve ~1 saniyelik acilis hazirligi iyilestirmeleri dahildir."
+{
+  "version": "55",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v55-Windows.zip",
+  "changelog": "v55: Maks Performans modu icin yeni kontroller (canli durum satiri, Yeniden kur, Modlari kaldir, JVM bayraklari), acilirken animasyonlu indirme yuzdesi katmani, instance degisince otomatik kapanma ve emoji/ozel simgelerden kalan soru isaretlerinin temizlenmesi. v54'un Turkce karakter duzeltmesi ve v53'un hiz iyilestirmeleri dahildir."
 }

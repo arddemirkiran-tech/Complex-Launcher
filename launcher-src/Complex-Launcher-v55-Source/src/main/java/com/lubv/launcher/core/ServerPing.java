@@ -77,9 +77,9 @@ public final class ServerPing {
             if (root.has("description")) {
                 Object descObj = root.get("description");
                 if (root.get("description").isJsonObject() && root.getAsJsonObject("description").has("text")) {
-                    result.motd = root.getAsJsonObject("description").get("text").getAsString();
+                    result.motd = com.lubv.launcher.ui.BrandFonts.safe(root.getAsJsonObject("description").get("text").getAsString());
                 } else if (root.get("description").isJsonPrimitive()) {
-                    result.motd = root.get("description").getAsString();
+                    result.motd = com.lubv.launcher.ui.BrandFonts.safe(root.get("description").getAsString());
                 }
             }
             if (root.has("version") && root.get("version").isJsonObject()) {

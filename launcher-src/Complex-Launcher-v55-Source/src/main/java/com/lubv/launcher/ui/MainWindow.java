@@ -168,6 +168,14 @@ extends JFrame {
     private JTextArea logArea;
     // V35.3: Maks Performans kurulum dongusu ayni anda iki kez calismasin.
     final java.util.concurrent.atomic.AtomicBoolean maxPerfInstallBusy = new java.util.concurrent.atomic.AtomicBoolean(false);
+    // v55: Maks Performans kontrol satiri + indirme yuzdesi katmani.
+    private JToggleButton maxPerfToggleRef;
+    private JLabel maxPerfStatusRef;
+    private JButton maxPerfReinstallRef;
+    private JButton maxPerfRemoveRef;
+    private MaxPerfOverlay maxPerfOverlay;
+    private volatile int maxPerfPct = -1;
+    private volatile String maxPerfStage = "";
     private JProgressBar progressBar;
     private JLabel progressStageLabel;
     private JButton launchButton;
@@ -1187,6 +1195,7 @@ extends JFrame {
             this.currentInstance = instance;
             this.settings.activeInstance = instance.name;
             this.settings.save();
+            this.turnOffMaxPerformanceOnInstanceChange(instance.name);
             this.applyInstanceToUi();
             this.modsPanel.refreshInstalled();
             this.shaderPanel.refreshInstalled();
@@ -1217,6 +1226,7 @@ extends JFrame {
             this.currentInstance = Instance.load(string2);
             this.settings.activeInstance = string2;
             this.settings.save();
+            this.turnOffMaxPerformanceOnInstanceChange(string2);
             this.applyInstanceToUi();
             this.modsPanel.refreshInstalled();
             this.shaderPanel.refreshInstalled();
@@ -2812,6 +2822,7 @@ extends JFrame {
             }
         };
         maxPerfToggle.setSelected(this.settings.maxPerformanceMode);
+        this.maxPerfToggleRef = maxPerfToggle;
         maxPerfToggle.addActionListener(actionEvent -> {
             boolean nowOn = maxPerfToggle.isSelected();
             if (nowOn) {
@@ -2820,25 +2831,68 @@ extends JFrame {
                 // ederse toggle eski haline doner, hicbir sey kurulmaz.
                 if (!this.handleMaxPerfConflictRemoval()) {
                     maxPerfToggle.setSelected(false);
-                    maxPerfToggle.setText(isEn ? "OFF" : "KAPALI");
                     this.settings.maxPerformanceMode = false;
                     this.settings.save();
+                    this.refreshMaxPerfControls();
                     return;
                 }
             }
             this.settings.maxPerformanceMode = nowOn;
             this.settings.save();
-            maxPerfToggle.setText(nowOn ? (isEn ? "ON" : "A\u00c7IK") : (isEn ? "OFF" : "KAPALI"));
+            this.refreshMaxPerfControls();
             if (nowOn) {
                 this.log(isEn ? "Maximum Performance enabled - installing performance mods for the current instance..." : "Maks Performans a\u00e7\u0131ld\u0131 - mevcut instance i\u00e7in performans modlar\u0131 kuruluyor...");
+                this.showMaxPerfOverlay();
                 this.installMaxPerformanceMods();
             } else {
                 this.log(isEn ? "Maximum Performance disabled." : "Maks Performans kapat\u0131ld\u0131.");
+                this.finishMaxPerfOverlay();
             }
         });
+        // v55: panelin alt satiri - durum + bakim kontrolleri.
+        JPanel maxPerfControls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        maxPerfControls.setOpaque(false);
+        this.maxPerfStatusRef = new JLabel("");
+        this.maxPerfStatusRef.setForeground(Theme.TEXT_MUTED);
+        this.maxPerfStatusRef.setFont(Theme.uiFont(0, 11.0f));
+        JButton maxPerfReinstall = new JButton(isEn ? "Reinstall" : "Yeniden kur");
+        maxPerfReinstall.setFont(Theme.uiFont(0, 11.0f));
+        maxPerfReinstall.setToolTipText(isEn ? "Install the performance mod set for this instance again" : "Bu instance i\u00e7in performans mod setini yeniden kurar");
+        maxPerfReinstall.addActionListener(actionEvent2 -> {
+            if (!this.settings.maxPerformanceMode) {
+                JOptionPane.showMessageDialog(this, isEn ? "Turn Maximum Performance on first." : "\u00d6nce Maks Performans'\u0131 a\u00e7\u0131n.", isEn ? "Maximum Performance" : "Maks Performans", 1);
+                return;
+            }
+            if (this.maxPerfInstallBusy.get()) {
+                JOptionPane.showMessageDialog(this, isEn ? "An installation is already running." : "Zaten bir kurulum s\u00fcr\u00fcyor.", isEn ? "Maximum Performance" : "Maks Performans", 1);
+                return;
+            }
+            this.showMaxPerfOverlay();
+            this.installMaxPerformanceMods();
+        });
+        this.maxPerfReinstallRef = maxPerfReinstall;
+        JButton maxPerfRemove = new JButton(isEn ? "Remove mods" : "Modlar\u0131 kald\u0131r");
+        maxPerfRemove.setFont(Theme.uiFont(0, 11.0f));
+        maxPerfRemove.setToolTipText(isEn ? "Delete the performance mods installed by this mode" : "Bu modun kurdu\u011fu performans modlar\u0131n\u0131 siler");
+        maxPerfRemove.addActionListener(actionEvent2 -> this.removeMaxPerformanceMods());
+        this.maxPerfRemoveRef = maxPerfRemove;
+        JButton maxPerfFlags = new JButton(isEn ? "JVM flags" : "JVM bayraklar\u0131");
+        maxPerfFlags.setFont(Theme.uiFont(0, 11.0f));
+        maxPerfFlags.setToolTipText(isEn ? "Show the GC/JIT flags this mode adds" : "Bu modun ekledi\u011fi GC/JIT bayraklar\u0131n\u0131 g\u00f6sterir");
+        maxPerfFlags.addActionListener(actionEvent2 -> this.showMaxPerfFlags());
+        maxPerfControls.add(maxPerfReinstall);
+        maxPerfControls.add(maxPerfRemove);
+        maxPerfControls.add(maxPerfFlags);
+        JPanel maxPerfSouth = new JPanel();
+        maxPerfSouth.setOpaque(false);
+        maxPerfSouth.setLayout(new BoxLayout(maxPerfSouth, 1));
+        maxPerfSouth.add(Box.createVerticalStrut(8));
+        maxPerfSouth.add(maxPerfControls);
         maxPerfPanel.add((Component)maxPerfTextCol, "Center");
         maxPerfPanel.add((Component)maxPerfToggle, "East");
+        maxPerfPanel.add((Component)maxPerfSouth, "South");
         jPanel.add((Component)maxPerfPanel, gridBagConstraints);
+        this.refreshMaxPerfControls();
         gridBagConstraints.insets = new Insets(0, 8, 0, 8);
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = ++n;
@@ -3909,6 +3963,9 @@ extends JFrame {
         }
         this.settings.activeInstance = string;
         this.settings.save();
+        // v55: her instance kendi mod setiyle calisir - Maks Performans
+        // baska bir instance'a gecince otomatik kapanir.
+        this.turnOffMaxPerformanceOnInstanceChange(string);
         this.applyInstanceToUi();
         this.modsPanel.refreshInstalled();
         this.shaderPanel.refreshInstalled();
@@ -4308,6 +4365,7 @@ extends JFrame {
         }
         this.settings.activeInstance = string;
         this.settings.save();
+        this.turnOffMaxPerformanceOnInstanceChange(string);
         this.applyInstanceToUi();
         if (this.instanceCombo != null) {
             this.instanceCombo.setSelectedItem(string);
@@ -9133,6 +9191,7 @@ extends JFrame {
             this.currentInstance = fresh;
             this.settings.activeInstance = fresh.name;
             this.settings.save();
+            this.turnOffMaxPerformanceOnInstanceChange(fresh.name);
             this.applyInstanceToUi();
         }
         this.refreshInstancesGrid();
@@ -9817,6 +9876,370 @@ extends JFrame {
         return true;
     }
 
+    /* ------------------------------------------------------------------
+     * v55 - Maks Performans kontrolleri
+     * ------------------------------------------------------------------ */
+
+    /** Bu instance'a Maks Performans modu tarafindan kurulan jar dosyalari. */
+    private static File maxPerfMarker(File modsDir) {
+        return new File(modsDir, ".maxperf-set.json");
+    }
+
+    /** Marker'da yazan ve hala diskte olan performans jar'larinin adlari. */
+    private java.util.Set<String> perfJarNames(File modsDir) {
+        java.util.Set<String> out = new java.util.LinkedHashSet<String>();
+        if (modsDir == null || !modsDir.isDirectory()) {
+            return out;
+        }
+        File marker = maxPerfMarker(modsDir);
+        if (!marker.isFile()) {
+            return out;
+        }
+        try {
+            JsonArray arr = JsonParser.parseString(new String(java.nio.file.Files.readAllBytes(marker.toPath()), java.nio.charset.StandardCharsets.UTF_8)).getAsJsonArray();
+            for (JsonElement e : arr) {
+                String name = e.getAsString();
+                if (new File(modsDir, name).isFile() || new File(modsDir, name + ".disabled").isFile()) {
+                    out.add(name);
+                }
+            }
+        }
+        catch (Throwable ignored) {
+            // bozuk marker kurulumu engellemesin
+        }
+        return out;
+    }
+
+    private void writePerfMarker(File modsDir, java.util.Set<String> names) {
+        try {
+            modsDir.mkdirs();
+            JsonArray arr = new JsonArray();
+            for (String name : names) {
+                arr.add(name);
+            }
+            java.nio.file.Files.write(maxPerfMarker(modsDir).toPath(), arr.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+        catch (Throwable ignored) {
+            // marker yazilamazsa mod kurulumu yine calisir
+        }
+    }
+
+    private java.util.Set<String> jarNamesIn(File modsDir) {
+        java.util.Set<String> out = new java.util.LinkedHashSet<String>();
+        File[] files = modsDir != null ? modsDir.listFiles() : null;
+        if (files == null) {
+            return out;
+        }
+        for (File f : files) {
+            String n = f.getName();
+            if (f.isFile() && n.toLowerCase().endsWith(".jar")) {
+                out.add(n);
+            }
+        }
+        return out;
+    }
+
+    /** Durum satiri + butonlarin etkinligi (panel kurulunca ve her degisiklikte). */
+    private void refreshMaxPerfControls() {
+        boolean isEn = L10n.isEnglish();
+        boolean on = this.settings.maxPerformanceMode;
+        if (this.maxPerfToggleRef != null) {
+            this.maxPerfToggleRef.setSelected(on);
+            this.maxPerfToggleRef.setText(on ? (isEn ? "ON" : "A\u00c7IK") : (isEn ? "OFF" : "KAPALI"));
+        }
+        if (this.maxPerfStatusRef == null) {
+            return;
+        }
+        File modsDir = this.currentInstance != null ? this.currentInstance.modsDir() : null;
+        int installed = this.perfJarNames(modsDir).size();
+        int total = this.currentInstance != null ? PerformanceFlags.recommendedPerformanceMods(this.currentInstance.loader).size() : 0;
+        String status;
+        if (!on) {
+            status = isEn ? "Off" : "Kapal\u0131";
+            if (installed > 0) {
+                status += isEn ? " - " + installed + " mods from this mode are still installed" : " - bu moda ait " + installed + " mod kurulu";
+            }
+        }
+        else if (this.maxPerfInstallBusy.get()) {
+            status = (isEn ? "Installing... " : "Kuruluyor... ") + installed + "/" + total;
+        }
+        else {
+            status = (isEn ? "On - " : "A\u00e7\u0131k - ") + installed + "/" + total + (isEn ? " mods installed" : " mod kurulu");
+        }
+        this.maxPerfStatusRef.setText(status);
+        if (this.maxPerfRemoveRef != null) {
+            this.maxPerfRemoveRef.setEnabled(installed > 0 && !this.maxPerfInstallBusy.get());
+        }
+        if (this.maxPerfReinstallRef != null) {
+            this.maxPerfReinstallRef.setEnabled(on && !this.maxPerfInstallBusy.get());
+        }
+    }
+
+    /** Bu modun kurdugu performans jar'larini siler (registry kaydi dahil). */
+    private void removeMaxPerformanceMods() {
+        boolean isEn = L10n.isEnglish();
+        File modsDir = this.currentInstance != null ? this.currentInstance.modsDir() : null;
+        java.util.Set<String> names = this.perfJarNames(modsDir);
+        if (names.isEmpty()) {
+            JOptionPane.showMessageDialog(this, isEn ? "No performance mods installed by this mode were found." : "Bu modun kurdu\u011fu performans modu bulunamad\u0131.", isEn ? "Maximum Performance" : "Maks Performans", 1);
+            return;
+        }
+        int answer = JOptionPane.showConfirmDialog(this,
+            isEn ? names.size() + " performance mod(s) will be deleted. Continue?" : names.size() + " performans modu silinecek. Devam edilsin mi?",
+            isEn ? "Remove performance mods" : "Performans modlar\u0131n\u0131 kald\u0131r", JOptionPane.YES_NO_OPTION);
+        if (answer != JOptionPane.YES_OPTION) {
+            return;
+        }
+        int removed = 0;
+        try {
+            List<ModManager.InstalledMod> registry = ModManager.loadRegistry(modsDir);
+            for (ModManager.InstalledMod mod : new ArrayList<ModManager.InstalledMod>(registry)) {
+                if (mod != null && mod.fileName != null && names.contains(mod.fileName)) {
+                    try {
+                        ModManager.removeMod(modsDir, mod);
+                        removed++;
+                    }
+                    catch (Exception exception) {
+                        this.log((isEn ? "Could not remove: " : "Silinemedi: ") + mod.fileName);
+                    }
+                }
+            }
+        }
+        catch (Throwable ignored) {
+            // registry okunamazsa dosyalar yine silinir
+        }
+        for (String name : names) {
+            File jar = new File(modsDir, name);
+            File disabled = new File(modsDir, name + ".disabled");
+            if (jar.isFile() && jar.delete()) {
+                removed++;
+            }
+            if (disabled.isFile()) {
+                disabled.delete();
+            }
+        }
+        maxPerfMarker(modsDir).delete();
+        this.log((isEn ? "[Maks Performans] " : "[Maks Performans] ") + removed + (isEn ? " performance mod(s) removed." : " performans modu kald\u0131r\u0131ld\u0131."));
+        this.modsPanel.refreshInstalled();
+        this.refreshMaxPerfControls();
+    }
+
+    /** Maks Performans'in ekledigi JVM bayraklarini gosterir. */
+    private void showMaxPerfFlags() {
+        boolean isEn = L10n.isEnglish();
+        if (this.currentInstance == null) {
+            return;
+        }
+        int ram = this.currentInstance.ramGB;
+        int major = JavaRuntime.detectMajor(this.currentInstance.javaPath != null && !this.currentInstance.javaPath.isBlank() ? this.currentInstance.javaPath : "java");
+        String flags = PerformanceFlags.recommendedJvmFlagsAsString(ram, major);
+        JTextArea area = new JTextArea(flags);
+        area.setEditable(false);
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+        area.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        area.setBackground(Theme.BG_BASE);
+        area.setForeground(Theme.TEXT_PRIMARY);
+        area.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        JScrollPane scroll = new JScrollPane(area);
+        scroll.setPreferredSize(new Dimension(520, 130));
+        JOptionPane.showMessageDialog(this, scroll,
+            (isEn ? "JVM flags - " : "JVM bayraklar\u0131 - ") + ram + " GB / Java " + major,
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /** Instance degisince Maks Performans otomatik kapanir (eski instance'in modlari karismasin). */
+    private void turnOffMaxPerformanceOnInstanceChange(String target) {
+        if (!this.settings.maxPerformanceMode) {
+            return;
+        }
+        boolean isEn = L10n.isEnglish();
+        this.settings.maxPerformanceMode = false;
+        this.settings.save();
+        this.log(isEn
+            ? "Maximum Performance turned off automatically (switched to '" + target + "')."
+            : "Maks Performans otomatik kapat\u0131ld\u0131 ('" + target + "' instance'\u0131na ge\u00e7ildi).");
+        this.refreshMaxPerfControls();
+    }
+
+    /* ------------------------------------------------------------------
+     * v55 - indirme yuzdesi animasyonu
+     * ------------------------------------------------------------------ */
+
+    private void showMaxPerfOverlay() {
+        if (this.maxPerfOverlay == null) {
+            this.maxPerfOverlay = new MaxPerfOverlay();
+            this.getLayeredPane().add(this.maxPerfOverlay, Integer.valueOf(JLayeredPane.POPUP_LAYER));
+            this.addComponentListener(new java.awt.event.ComponentAdapter() {
+                @Override
+                public void componentResized(java.awt.event.ComponentEvent componentEvent) {
+                    if (MainWindow.this.maxPerfOverlay != null && MainWindow.this.maxPerfOverlay.isVisible()) {
+                        MainWindow.this.maxPerfOverlay.bindBounds();
+                    }
+                }
+            });
+        }
+        this.maxPerfPct = 0;
+        this.maxPerfStage = L10n.isEnglish() ? "Starting..." : "Ba\u015fl\u0131yor...";
+        this.maxPerfOverlay.start();
+    }
+
+    private void setMaxPerfProgress(int pct, String stage) {
+        this.maxPerfPct = Math.max(0, Math.min(100, pct));
+        this.maxPerfStage = stage == null ? "" : stage;
+    }
+
+    private void finishMaxPerfOverlay() {
+        if (this.maxPerfOverlay == null) {
+            return;
+        }
+        this.maxPerfPct = 100;
+        this.maxPerfOverlay.finish();
+    }
+
+    private final class MaxPerfOverlay extends JPanel {
+        private final javax.swing.Timer timer;
+        private float shown;
+        private float alpha;
+        private float spin;
+        private boolean closing;
+        private long fadeAt;
+
+        MaxPerfOverlay() {
+            this.setOpaque(false);
+            this.setFocusable(false);
+            this.timer = new javax.swing.Timer(16, actionEvent -> this.tick());
+            this.timer.setCoalesce(true);
+            this.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mousePressed(MouseEvent mouseEvent) {
+                    // katman acikken arkadaki kontrollere tiklanmasin
+                }
+            });
+        }
+
+        void start() {
+            this.closing = false;
+            this.fadeAt = 0L;
+            this.alpha = 0f;
+            this.shown = 0f;
+            this.setVisible(true);
+            this.bindBounds();
+            this.timer.start();
+        }
+
+        void bindBounds() {
+            Container parent = this.getParent();
+            if (parent != null) {
+                this.setBounds(0, 0, parent.getWidth(), parent.getHeight());
+            }
+        }
+
+        void finish() {
+            if (!this.isVisible()) {
+                return;
+            }
+            this.closing = true;
+            this.fadeAt = System.currentTimeMillis() + 650L;
+        }
+
+        void stopNow() {
+            this.timer.stop();
+            this.closing = false;
+            this.alpha = 0f;
+            this.setVisible(false);
+        }
+
+        private void tick() {
+            this.spin += 0.09f;
+            int target = maxPerfPct < 0 ? 0 : Math.min(100, maxPerfPct);
+            if (this.closing) {
+                target = 100;
+            }
+            this.shown += (target - this.shown) * 0.16f;
+            if (Math.abs(target - this.shown) < 0.2f) {
+                this.shown = target;
+            }
+            if (!this.closing) {
+                this.alpha = Math.min(1f, this.alpha + 0.12f);
+            }
+            else if (System.currentTimeMillis() >= this.fadeAt) {
+                this.alpha -= 0.07f;
+            }
+            if (this.alpha <= 0.02f && this.closing) {
+                this.stopNow();
+                return;
+            }
+            this.repaint();
+        }
+
+        private void centered(Graphics2D g2, String text, int centerX, int baselineY) {
+            if (text == null || text.isEmpty()) {
+                return;
+            }
+            FontMetrics fm = g2.getFontMetrics();
+            g2.drawString(text, centerX - fm.stringWidth(text) / 2, baselineY);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            if (this.alpha <= 0f) {
+                return;
+            }
+            Graphics2D g2 = (Graphics2D)g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            int w = this.getWidth();
+            int h = this.getHeight();
+            // arkadaki arayuzu karart
+            g2.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.55f * this.alpha));
+            g2.setColor(new Color(6, 7, 11));
+            g2.fillRect(0, 0, w, h);
+            g2.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, this.alpha));
+            int cardW = Math.min(430, Math.max(280, w - 80));
+            int cardH = 210;
+            int x = (w - cardW) / 2;
+            int y = (h - cardH) / 2;
+            g2.setColor(new Color(0, 0, 0, 110));
+            g2.fillRoundRect(x + 3, y + 6, cardW, cardH, 22, 22);
+            g2.setColor(Theme.BG_ELEVATED);
+            g2.fillRoundRect(x, y, cardW, cardH, 22, 22);
+            g2.setColor(new Color(Theme.ACCENT.getRed(), Theme.ACCENT.getGreen(), Theme.ACCENT.getBlue(), (int)(110 + 60 * Math.abs(Math.sin((double)this.spin * 0.6)))));
+            g2.setStroke(new BasicStroke(2.0f));
+            g2.drawRoundRect(x, y, cardW, cardH, 22, 22);
+            int cx = x + cardW / 2;
+            g2.setColor(Theme.ACCENT_BRIGHT);
+            g2.setFont(Theme.uiFont(1, 13.0f));
+            this.centered(g2, L10n.isEnglish() ? "MAXIMUM PERFORMANCE" : "MAKS PERFORMANS", cx, y + 36);
+            g2.setColor(Theme.TEXT_PRIMARY);
+            g2.setFont(Theme.uiFont(1, 46.0f));
+            this.centered(g2, Math.round(this.shown) + "%", cx, y + 100);
+            int barW = cardW - 72;
+            int barX = x + 36;
+            int barY = y + 118;
+            int barH = 8;
+            g2.setColor(Theme.BG_BORDER);
+            g2.fillRoundRect(barX, barY, barW, barH, barH, barH);
+            int fill = (int)Math.round(barW * (Math.max(0f, this.shown) / 100f));
+            if (fill > 0) {
+                g2.setPaint(new GradientPaint(barX, 0f, Theme.ACCENT, barX + barW, 0f, Theme.ACCENT_BRIGHT));
+                g2.fillRoundRect(barX, barY, Math.max(barH, fill), barH, barH, barH);
+            }
+            if (this.shown > 0.5f && this.shown < 99.5f) {
+                g2.setColor(new Color(255, 255, 255, 170));
+                int dot = (int)((barX + barW * (this.shown / 100f)) + Math.sin((double)this.spin * 2.0) * 3.0);
+                g2.fillOval(dot - 3, barY - 2, 12, 12);
+            }
+            g2.setColor(Theme.TEXT_SECONDARY);
+            g2.setFont(Theme.uiFont(0, 11.0f));
+            this.centered(g2, MainWindow.this.maxPerfStage, cx, y + 152);
+            g2.setColor(Theme.TEXT_MUTED);
+            g2.setFont(Theme.uiFont(0, 10.0f));
+            this.centered(g2, L10n.isEnglish() ? "Performance mods are being prepared" : "Performans modlar\u0131 haz\u0131rlan\u0131yor", cx, y + 176);
+            g2.dispose();
+        }
+    }
+
     private void installMaxPerformanceMods() {
         if (this.currentInstance == null) {
             this.log("Aktif instance yok - performans modlar\u0131 kurulamad\u0131.");
@@ -9833,6 +10256,8 @@ extends JFrame {
             return;
         }
         this.maxPerfInstallBusy.set(true);
+        this.refreshMaxPerfControls();
+        final java.util.Set<String> namesBefore = this.jarNamesIn(modsDir);
         final long startEpoch = ModManager.epochNow();
         List<PerformanceFlags.PerfMod> mods = PerformanceFlags.recommendedPerformanceMods(loaderName);
         // V34.8 HIZ: tum modlarin Modrinth version listelerini PARALEL one
@@ -9865,10 +10290,16 @@ extends JFrame {
                     final int num = idx;
                     final int tot = total;
                     final String title = mod.title;
-                    SwingUtilities.invokeLater(() -> this.log("[" + num + "/" + tot + "] " + title + " - " + (isEn ? "installing..." : "kuruluyor...")));
+                    final int pctBefore = (int)Math.round((num - 1) * 100.0 / Math.max(1, tot));
+                    SwingUtilities.invokeLater(() -> {
+                        this.setMaxPerfProgress(pctBefore, "[" + num + "/" + tot + "] " + title);
+                        this.log("[" + num + "/" + tot + "] " + title + " - " + (isEn ? "installing..." : "kuruluyor..."));
+                    });
                     try {
-                        if (ModManager.epochNow() != startEpoch) {
-                            SwingUtilities.invokeLater(() -> this.log("  " + (isEn ? "Cancelled - MC version changed." : "Iptal - MC surumu degisti.")));
+                        if (ModManager.epochNow() != startEpoch || !this.settings.maxPerformanceMode) {
+                            SwingUtilities.invokeLater(() -> this.log("  " + (ModManager.epochNow() != startEpoch
+                                ? (isEn ? "Cancelled - MC version changed." : "Iptal - MC surumu degisti.")
+                                : (isEn ? "Cancelled - Maximum Performance was turned off." : "Iptal - Maks Performans kapat\u0131ld\u0131."))));
                             return;
                         }
                         boolean ok = ModManager.installProject(modsDir, mod.slug, loaderName, mcVersion);
@@ -9904,11 +10335,27 @@ extends JFrame {
                     SwingUtilities.invokeLater(() -> this.log("[Uyumluluk] Kontrol yapilamadi: " + t.getMessage()));
                 }
                 final int fPruned = pruned;
+                // v55: bu modun kurdugu jar'lari isaretle - "Modlari kaldir"
+                // ve durum satiri (kurulu/toplam) bu listeden beslenir.
+                try {
+                    java.util.Set<String> fresh = new java.util.LinkedHashSet<String>(this.jarNamesIn(modsDir));
+                    fresh.removeAll(namesBefore);
+                    if (!fresh.isEmpty()) {
+                        java.util.Set<String> merged = this.perfJarNames(modsDir);
+                        merged.addAll(fresh);
+                        this.writePerfMarker(modsDir, merged);
+                    }
+                }
+                catch (Throwable ignored) {
+                    // isaret yazilamazsa kurulum yine gecerli
+                }
                 SwingUtilities.invokeLater(() -> {
                     this.log("[Maks Performans] " + fi + " mod kuruldu, " + fs + " atlandi."
                         + (fPruned > 0 ? ", " + fPruned + " uyumsuz mod kaldirildi" : ", uyumluluk kontrolu temiz"));
                     this.modsPanel.refreshInstalled();
                     this.maxPerfInstallBusy.set(false);
+                    this.refreshMaxPerfControls();
+                    this.finishMaxPerfOverlay();
                 });
             }
         }, "max-performance-install").start();

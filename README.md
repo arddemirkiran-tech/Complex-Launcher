@@ -6,15 +6,23 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
-## ⬇️ Download (Latest: v54)
+## ⬇️ Download (Latest: v55)
 
 | File | Description |
 |---|---|
 | [`Complex-Launcher-Setup.exe`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-Setup.exe) | Windows installer — auto-downloads the latest release, creates shortcuts, checks Java |
-| [`Complex-Launcher-v54-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v54-Windows.zip) | Portable Windows build (bundled runtime) |
-| [`Complex-Launcher-v54-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v54-Linux.zip) | Portable Linux build |
+| [`Complex-Launcher-v55-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v55-Windows.zip) | Portable Windows build (bundled runtime) |
+| [`Complex-Launcher-v55-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v55-Linux.zip) | Portable Linux build |
 
 Website: **https://complexlauncher.gt.tc**
+
+## 🆕 What's new in v55
+
+- **Maximum Performance gets real controls** — the settings panel now shows a live status line (`On - 42/48 mods installed`) plus three buttons: **Reinstall** (rebuilds the performance set for this instance), **Remove mods** (deletes the jars this mode installed, registry entry included) and **JVM flags** (shows the GC/JIT flags it adds for the current RAM and Java version). Installed jars are tracked in `.maxperf-set.json`, so mods you installed yourself are never touched.
+- **Download percentage animation** — turning the mode on fades a glass overlay over the window with a large percentage, an animated progress bar and the mod being installed (`[7/48] FerriteCore`). It eases to 100 % and fades out on its own when the install finishes.
+- **Auto-off on instance switch** — the mode is now per instance. Switching to another instance (list, quick switch, rename, delete) turns it back to **OFF**, saves the setting and cancels a running install, so one instance's performance set never leaks into another.
+- **Remaining `?` glyphs fixed** — emoji and symbols the bundled faces cannot draw (feedback categories, crash dialog arrow, console warning) were removed, and Modrinth mod/shader/resource-pack titles, descriptions and server MOTDs are now stripped of characters the fonts cannot render while Turkish characters are preserved.
+- Version bump to **v55** across the launcher and update checks.
 
 ## 🆕 What's new in v54
 

@@ -268,7 +268,7 @@ public final class L10n {
         L10n.r("crash.deep.header", "CRASH ANALİZİ", "CRASH ANALYSIS");
         L10n.r("crash.deep.root_cause", "Sebep: %s", "Root cause: %s");
         L10n.r("crash.deep.exception_line", "Hata satırı: %s", "Exception line: %s");
-        L10n.r("crash.deep.mod_file", "Sorumlu mod dosyası: %s → bu dosyayı kaldırıp tekrar deneyin.", "Responsible mod file: %s → remove this file and try again.");
+        L10n.r("crash.deep.mod_file", "Sorumlu mod dosyası: %s -> bu dosyayı kaldırıp tekrar deneyin.", "Responsible mod file: %s -> remove this file and try again.");
         L10n.r("crash.deep.suspected_mods", "Şüpheli modlar: %s", "Suspected mods: %s");
         L10n.r("crash.deep.no_mod_attribution", "Sorumlu mod tespit edilemedi.", "No mod could be attributed.");
         L10n.r("crash.deep.java_version", "Java: çalışan %s / oyunun istediği %s — JVM Profilleri menüsünden eşleştirin.", "Java: running %s / game wants %s — match it via the JVM Profiles menu.");
@@ -403,11 +403,11 @@ public final class L10n {
         L10n.r("feedback.intro", "Yazdığın öneri sitenin Öneriler listesinde anında yayınlanır.", "Your suggestion is published right away in the Suggestions list on the website.");
         L10n.r("feedback.category", "Tür:", "Type:");
         L10n.r("feedback.category_tip", "Önerinin türü (sitedeki kategoriyle aynı)", "What kind of feedback this is (same categories as the site)");
-        L10n.r("feedback.cat.idea", "💡 Fikir", "💡 Idea");
-        L10n.r("feedback.cat.bug", "🐞 Hata bildirimi", "🐞 Bug report");
-        L10n.r("feedback.cat.feature", "✨ Özellik isteği", "✨ Feature request");
-        L10n.r("feedback.cat.mod", "🧩 Mod / paket isteği", "🧩 Mod / pack request");
-        L10n.r("feedback.cat.other", "💬 Diğer", "💬 Something else");
+        L10n.r("feedback.cat.idea", "Fikir", "Idea");
+        L10n.r("feedback.cat.bug", "Hata bildirimi", "Bug report");
+        L10n.r("feedback.cat.feature", "Özellik isteği", "Feature request");
+        L10n.r("feedback.cat.mod", "Mod / paket isteği", "Mod / pack request");
+        L10n.r("feedback.cat.other", "Diğer", "Something else");
         L10n.r("feedback.name", "Adın:", "Your name:");
         L10n.r("feedback.name_tip", "Boş bırakırsan öneri 'Anonymous' olarak görünür.", "Leave it empty and the post shows as 'Anonymous'.");
         L10n.r("feedback.message", "Önerin:", "Your suggestion:");

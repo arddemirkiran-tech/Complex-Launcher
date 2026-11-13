@@ -32,6 +32,8 @@ public final class BrandFonts {
 
     private static String body;
     private static String display;
+    private static Font bodyProbe;
+    private static Font displayProbe;
     private static boolean loaded;
 
     private BrandFonts() {
@@ -82,6 +84,46 @@ public final class BrandFonts {
         if (body != null && new Font(body, Font.PLAIN, 12).canDisplayUpTo(REQUIRED) != -1) {
             body = null;
         }
+        bodyProbe = body != null ? new Font(body, Font.PLAIN, 12) : null;
+        displayProbe = display != null ? new Font(display, Font.PLAIN, 12) : null;
+    }
+
+    /**
+     * v55: metni gomulu yuzlerin CIZEBILDIGI karakterlere indirger.
+     * Modrinth'ten gelen basliklar, sunucu MOTD'si ve benzeri dis kaynakli
+     * yazilar emoji/ozel simge icerebiliyor; bu yuzlerde karsiligi olmayan
+     * karakterler ekranda kutu/soru isareti olarak cikiyordu. Burada o
+     * karakterler atilir, metnin geri kalani (Türkçe dahil) korunur.
+     */
+    public static String safe(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        Font probe = bodyProbe != null ? bodyProbe : displayProbe;
+        if (probe == null) {
+            return text;
+        }
+        StringBuilder out = new StringBuilder(text.length());
+        boolean removed = false;
+        for (int i = 0; i < text.length(); ) {
+            int cp = text.codePointAt(i);
+            i += Character.charCount(cp);
+            if (cp == '\n' || cp == '\t' || cp == '\r' || cp < 0x7F) {
+                out.appendCodePoint(cp);
+            }
+            else if (probe.canDisplay(cp)
+                || (displayProbe != null && displayProbe.canDisplay(cp))) {
+                out.appendCodePoint(cp);
+            }
+            else {
+                removed = true;
+            }
+        }
+        String clean = out.toString();
+        if (removed) {
+            clean = clean.replaceAll(" {2,}", " ").replaceAll("^ | $|[ \\u00a0]+$", "");
+        }
+        return clean;
     }
 
     /** Space Grotesk, or null when the bundle could not be registered. */
