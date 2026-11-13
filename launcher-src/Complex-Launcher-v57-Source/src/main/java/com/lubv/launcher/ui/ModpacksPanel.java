@@ -331,9 +331,10 @@ extends JPanel {
         JLabel jLabel = new JLabel(com.lubv.launcher.core.L10n.isEnglish() ? "Local Import" : "Yerel Ice Aktar");
         jLabel.setFont(Theme.uiFont(1, 14.0f));
         jLabel.setForeground(Theme.TEXT_PRIMARY);
-        JLabel jLabel2 = new JLabel(com.lubv.launcher.core.L10n.isEnglish()
-            ? "<html><center>You can import a modpack by selecting a .zip or .mrpack file from your computer.</center></html>"
-            : "<html><center>Bilgisayarinizdan .zip veya .mrpack dosyasi secerek modpack ice aktarabilirsiniz.</center></html>");
+        // Sabit <center> + uzun satir karttan genisti; yazi kesiliyordu. Artik sarar.
+        JLabel jLabel2 = new WrapLabel(com.lubv.launcher.core.L10n.isEnglish()
+            ? "You can import a modpack by selecting a .zip or .mrpack file from your computer."
+            : "Bilgisayarinizdan .zip veya .mrpack dosyasi secerek modpack ice aktarabilirsiniz.");
         jLabel2.setFont(jLabel2.getFont().deriveFont(0, 12.0f));
         jLabel2.setForeground(Theme.TEXT_MUTED);
         jLabel2.setHorizontalAlignment(0);

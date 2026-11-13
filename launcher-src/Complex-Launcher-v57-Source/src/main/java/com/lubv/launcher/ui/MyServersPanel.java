@@ -198,6 +198,17 @@ extends JPanel {
         this.listPanel.repaint();
     }
 
+    /**
+     * Sabit genislik yuzunden "Duzenle"/"Modlar" gibi yazilar kesiliyor ve
+     * sonlarina "..." ekleniyordu; genislik yazi olcusune gore hesaplanir.
+     */
+    private static void fitButtonWidth(javax.swing.AbstractButton button, int minWidth, int height) {
+        java.awt.Insets in = button.getInsets();
+        int pad = in == null ? 16 : in.left + in.right;
+        int textWidth = button.getFontMetrics(button.getFont()).stringWidth(button.getText());
+        button.setPreferredSize(new Dimension(Math.max(minWidth, textWidth + pad + 6), height));
+    }
+
     private JPanel buildServerCard(int n, ServerEntry serverEntry) {
         JPanel jPanel = new JPanel(new BorderLayout(12, 0));
         jPanel.setOpaque(true);
@@ -240,7 +251,7 @@ extends JPanel {
         jLabel4.setHorizontalAlignment(0);
         this.doPing(serverEntry.ip, jLabel4);
         JButton jButton = UiFx.accentButton("Oyna");
-        jButton.setPreferredSize(new Dimension(70, 28));
+        MyServersPanel.fitButtonWidth(jButton, 70, 28);
         jButton.addActionListener(actionEvent -> {
             if (this.playCallback != null) {
                 if (serverEntry.password != null && !serverEntry.password.isBlank()) {
@@ -257,13 +268,13 @@ extends JPanel {
             }
         });
         JButton jButton2 = UiFx.ghostButton(com.lubv.launcher.core.L10n.isEnglish() ? "Edit" : "Duzenle");
-        jButton2.setPreferredSize(new Dimension(70, 28));
+        MyServersPanel.fitButtonWidth(jButton2, 70, 28);
         jButton2.addActionListener(actionEvent -> this.showEditDialog(n, serverEntry));
         // V33.2: Sunucuya ozel mod yonetimi. Loader Vanilla degilse (veya
         // kullanici Vanilla'yai secmek istiyorsa) Mods sekmesi o sunucunun
         // Server-<ip> instance'ina yonlendirilir.
         JButton jButtonMods = UiFx.ghostButton(com.lubv.launcher.core.L10n.isEnglish() ? "Mods" : "Modlar");
-        jButtonMods.setPreferredSize(new Dimension(70, 28));
+        MyServersPanel.fitButtonWidth(jButtonMods, 70, 28);
         jButtonMods.setToolTipText(com.lubv.launcher.core.L10n.isEnglish()
             ? "Manage mods/shaders/resource packs for THIS server"
             : "Bu sunucuya ozel mod/shader/kaynak paketi yonetimi");
@@ -274,7 +285,7 @@ extends JPanel {
             }
         });
         JButton jButton3 = UiFx.dangerButton(com.lubv.launcher.core.L10n.isEnglish() ? "Delete" : "Sil");
-        jButton3.setPreferredSize(new Dimension(50, 28));
+        MyServersPanel.fitButtonWidth(jButton3, 50, 28);
         jButton3.addActionListener(actionEvent -> {
             int n2 = JOptionPane.showConfirmDialog(this, "\"" + serverEntry.name + "\" silinsin mi?", "Sunucu Sil", 0);
             if (n2 == 0) {

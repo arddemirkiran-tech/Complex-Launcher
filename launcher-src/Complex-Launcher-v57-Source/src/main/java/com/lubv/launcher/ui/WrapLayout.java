@@ -10,7 +10,23 @@ import javax.swing.SwingUtilities;
 
 /** FlowLayout'un satir atlayan (wrap) surumu; JScrollPane icinde genisligi izleyen panellerle kullanilir. */
 final class WrapLayout extends FlowLayout {
+    private int lastWidth = -1;
+
     WrapLayout(int align, int hgap, int vgap) { super(align, hgap, vgap); }
+
+    /**
+     * Sarma sonrasi yukseklik degisirse ust panelden bir kez daha yerlesim
+     * istenir; yoksa tek satirlik yukseklik ayrilip alt satirdaki ogeler
+     * kesiliyordu (metinler "..." ile kirpiliyordu).
+     */
+    @Override
+    public void layoutContainer(Container target) {
+        super.layoutContainer(target);
+        if (target.getWidth() != this.lastWidth) {
+            this.lastWidth = target.getWidth();
+            target.revalidate();
+        }
+    }
 
     @Override public Dimension preferredLayoutSize(Container target) { return layoutSize(target, true); }
 

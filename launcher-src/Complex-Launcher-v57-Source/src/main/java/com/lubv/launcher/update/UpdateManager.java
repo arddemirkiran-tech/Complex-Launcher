@@ -26,7 +26,7 @@ public class UpdateManager {
     private static final String GITHUB_OWNER = "arddemirkiran-tech";
     private static final String GITHUB_REPO = "Complex-Launcher";
     private static final String GITHUB_API_URL = "https://api.github.com/repos/arddemirkiran-tech/Complex-Launcher/releases/latest";
-    public static final String CURRENT_VERSION = "56";
+    public static final String CURRENT_VERSION = "57";
     /**
      * v49 TEST build: shown in the title bar and splash so this build is never
      * confused with the stable v49 package. Empty string = stable labelling.

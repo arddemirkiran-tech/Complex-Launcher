@@ -784,6 +784,24 @@ extends JFrame {
     }
 
     /**
+     * Panel genisligine gore satir atlayan HTML etiket.
+     * ONCEDEN bu etiketler sabit <br> ile yaziliyordu; panel daraldiginda
+     * yazinin sagi kesiliyor, ekranda sonuna "..." eklenmis yarim cumleler
+     * gorunuyordu. Bu sinif metni kendi genisligine gore sarar, boylece
+     * kesilme ve "..." olusmaz.
+     */
+    /** Acik/Kapali yazisi butona sigsin diye genisligi yazi olcusunden hesaplar. */
+    private static void fitToggle(javax.swing.AbstractButton button) {
+        String text = button.getText();
+        int textWidth = text == null ? 0 : button.getFontMetrics(button.getFont()).stringWidth(text);
+        int width = Math.max(96, textWidth + 34);
+        java.awt.Dimension size = new java.awt.Dimension(width, 40);
+        button.setPreferredSize(size);
+        button.setMinimumSize(size);
+        button.revalidate();
+    }
+
+    /**
      * Instance kartlari icin isim-bazli tutarli bir gradyan uretir.
      * ONCEDEN bu fonksiyon CARD_GRADIENTS adinda 8 SABIT renkten
      * (hep ayni mor/mavi/yesil/kirmizi tonlari) birini seciyordu -
@@ -2734,20 +2752,15 @@ extends JFrame {
         };
         maxPerfPanel.setOpaque(false);
         maxPerfPanel.setBorder(BorderFactory.createEmptyBorder(12, 14, 12, 14));
-        JPanel maxPerfTextCol = new JPanel();
-        maxPerfTextCol.setOpaque(false);
-        maxPerfTextCol.setLayout(new BoxLayout(maxPerfTextCol, 1));
         JLabel maxPerfTitle = new JLabel(isEn ? "Maximum Performance Mode" : "MAKS PERFORMANS MODU");
         maxPerfTitle.setForeground(Theme.ACCENT_BRIGHT);
         maxPerfTitle.setFont(maxPerfTitle.getFont().deriveFont(1, 14.5f));
-        JLabel maxPerfDesc = new JLabel("<html>" + (isEn
-            ? "Installs ~48 performance mods on Fabric / ~39 on Forge (Sodium, Lithium,<br>Entity Culling, FerriteCore, ImmediatelyFast and more) + tuned GC/JIT flags"
-            : "Sisteminiz i\u00e7in ayarlanm\u0131\u015f GC/JIT bayraklar\u0131 + Fabric'te ~48, Forge'da ~39<br>performans modu (Sodium, Lithium, Entity Culling, FerriteCore vb.) kurar") + "</html>");
+        // v56.1: sabit <br> yok - metin panel genisligine gore kendi sarar.
+        JLabel maxPerfDesc = new WrapLabel(isEn
+            ? "Installs ~48 performance mods on Fabric / ~39 on Forge (Sodium, Lithium, Entity Culling, FerriteCore, ImmediatelyFast and more) + tuned GC/JIT flags"
+            : "Sisteminiz i\u00e7in ayarlanm\u0131\u015f GC/JIT bayraklar\u0131 + Fabric'te ~48, Forge'da ~39 performans modu (Sodium, Lithium, Entity Culling, FerriteCore vb.) kurar");
         maxPerfDesc.setForeground(Theme.TEXT_SECONDARY);
         maxPerfDesc.setFont(maxPerfDesc.getFont().deriveFont(10.5f));
-        maxPerfTextCol.add(maxPerfTitle);
-        maxPerfTextCol.add(Box.createVerticalStrut(3));
-        maxPerfTextCol.add(maxPerfDesc);
         JToggleButton maxPerfToggle = new JToggleButton(this.settings.maxPerformanceMode ? (isEn ? "ON" : "A\u00c7IK") : (isEn ? "OFF" : "KAPALI")) {
             private float hover = 0.0f;
             private float press = 0.0f;
@@ -2822,6 +2835,7 @@ extends JFrame {
             }
         };
         maxPerfToggle.setSelected(this.settings.maxPerformanceMode);
+        MainWindow.fitToggle(maxPerfToggle);
         this.maxPerfToggleRef = maxPerfToggle;
         maxPerfToggle.addActionListener(actionEvent -> {
             boolean nowOn = maxPerfToggle.isSelected();
@@ -2850,11 +2864,16 @@ extends JFrame {
             }
         });
         // v55: panelin alt satiri - durum + bakim kontrolleri.
-        JPanel maxPerfControls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        maxPerfControls.setOpaque(false);
-        this.maxPerfStatusRef = new JLabel("");
+        // v56.1: durum yazisi kendi satirinda (tam genislik) ve butonlar
+        // satir atlayan WrapLayout icinde - dar panelde tasma/kesilme yok.
+        JLabel maxPerfStatus = new WrapLabel("");
+        maxPerfStatus.setAlignmentX(0.0f);
+        this.maxPerfStatusRef = maxPerfStatus;
         this.maxPerfStatusRef.setForeground(Theme.TEXT_MUTED);
         this.maxPerfStatusRef.setFont(Theme.uiFont(0, 11.0f));
+        JPanel maxPerfControls = new JPanel(new WrapLayout(FlowLayout.LEFT, 8, 6));
+        maxPerfControls.setOpaque(false);
+        maxPerfControls.setAlignmentX(0.0f);
         JButton maxPerfReinstall = new JButton(isEn ? "Reinstall" : "Yeniden kur");
         maxPerfReinstall.setFont(Theme.uiFont(0, 11.0f));
         maxPerfReinstall.setToolTipText(isEn ? "Install the performance mod set for this instance again" : "Bu instance i\u00e7in performans mod setini yeniden kurar");
@@ -2883,13 +2902,28 @@ extends JFrame {
         maxPerfControls.add(maxPerfReinstall);
         maxPerfControls.add(maxPerfRemove);
         maxPerfControls.add(maxPerfFlags);
-        JPanel maxPerfSouth = new JPanel();
+        // v56.1: GridBag - durum yazisi ve buton satiri panel genisligine
+        // yayilir (BoxLayout cocuklari tercih edilen genislikte kalip
+        // tasiyordu).
+        JPanel maxPerfSouth = new JPanel(new java.awt.GridBagLayout());
         maxPerfSouth.setOpaque(false);
-        maxPerfSouth.setLayout(new BoxLayout(maxPerfSouth, 1));
-        maxPerfSouth.add(Box.createVerticalStrut(8));
-        maxPerfSouth.add(maxPerfControls);
-        maxPerfPanel.add((Component)maxPerfTextCol, "Center");
-        maxPerfPanel.add((Component)maxPerfToggle, "East");
+        java.awt.GridBagConstraints southC = new java.awt.GridBagConstraints();
+        southC.gridx = 0;
+        southC.gridy = 0;
+        southC.weightx = 1.0;
+        southC.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        southC.insets = new Insets(8, 0, 0, 0);
+        maxPerfSouth.add((Component)this.maxPerfStatusRef, southC);
+        southC.gridy = 1;
+        southC.insets = new Insets(6, 0, 0, 0);
+        maxPerfSouth.add((Component)maxPerfControls, southC);
+        // v56.1: baslik sola, anahtar saga; aciklama tam genislikte alt satirda.
+        JPanel maxPerfHead = new JPanel(new BorderLayout(10, 0));
+        maxPerfHead.setOpaque(false);
+        maxPerfHead.add(maxPerfTitle, "Center");
+        maxPerfHead.add((Component)maxPerfToggle, "East");
+        maxPerfPanel.add((Component)maxPerfHead, "North");
+        maxPerfPanel.add((Component)maxPerfDesc, "Center");
         maxPerfPanel.add((Component)maxPerfSouth, "South");
         jPanel.add((Component)maxPerfPanel, gridBagConstraints);
         this.refreshMaxPerfControls();
@@ -9946,6 +9980,7 @@ extends JFrame {
         if (this.maxPerfToggleRef != null) {
             this.maxPerfToggleRef.setSelected(on);
             this.maxPerfToggleRef.setText(on ? (isEn ? "ON" : "A\u00c7IK") : (isEn ? "OFF" : "KAPALI"));
+            MainWindow.fitToggle(this.maxPerfToggleRef);
         }
         if (this.maxPerfStatusRef == null) {
             return;

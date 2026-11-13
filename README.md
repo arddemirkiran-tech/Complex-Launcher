@@ -6,15 +6,23 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
-## ⬇️ Download (Latest: v56)
+## ⬇️ Download (Latest: v57)
 
 | File | Description |
 |---|---|
 | [`Complex-Launcher-Setup.exe`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-Setup.exe) | Windows installer — auto-downloads the latest release, creates shortcuts, checks Java |
-| [`Complex-Launcher-v56-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v56-Windows.zip) | Portable Windows build (bundled runtime) |
-| [`Complex-Launcher-v56-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v56-Linux.zip) | Portable Linux build |
+| [`Complex-Launcher-v57-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v57-Windows.zip) | Portable Windows build (bundled runtime) |
+| [`Complex-Launcher-v57-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v57-Linux.zip) | Portable Linux build |
 
 Website: **https://complexlauncher.gt.tc**
+
+## What's new in v57
+
+- **Cut-off texts fixed.** When a panel was narrow, labels were clipped and Swing appended "..." to them. Fixed:
+  - the **Maximum Performance panel** was rebuilt: title left, the ON/OFF switch now sized from its own label width (so "KAPALI" fits), the description wraps to the panel width instead of fixed line breaks, the status line ("On - 22/48 mods installed") sits on its own full-width row, and the Reinstall / Remove mods / JVM flags buttons wrap instead of overflowing;
+  - **server card buttons** ("Play / Mods / Edit / Delete") are sized from their text instead of a fixed 50-70 px, so "Edit"/"DuzEnle"-length labels no longer ellipsize;
+  - the **local import description** on the Modpacks tab wraps to its card instead of using a fixed-width centered HTML block.
+- New shared `WrapLabel` component so long descriptions wrap instead of being clipped.
 
 ## 🆕 What's new in v56
 
