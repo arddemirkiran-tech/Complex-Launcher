@@ -6,15 +6,26 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
-## ⬇️ Download (Latest: v52)
+## ⬇️ Download (Latest: v53)
 
 | File | Description |
 |---|---|
 | [`Complex-Launcher-Setup.exe`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-Setup.exe) | Windows installer — auto-downloads the latest release, creates shortcuts, checks Java |
-| [`Complex-Launcher-v52-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v52-Windows.zip) | Portable Windows build (bundled runtime) |
-| [`Complex-Launcher-v52-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v52-Linux.zip) | Portable Linux build |
+| [`Complex-Launcher-v53-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v53-Windows.zip) | Portable Windows build (bundled runtime) |
+| [`Complex-Launcher-v53-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v53-Linux.zip) | Portable Linux build |
 
 Website: **https://complexlauncher.gt.tc**
+
+## 🆕 What's new in v53
+
+- **Balanced home page** — the selected-instance hero card used to take `weighty = 1.0` and swallow every spare vertical pixel, leaving a huge empty gradient and pushing the recent-instances / game-settings cards off screen. It now keeps its natural height (~240 px) and the remaining space goes to the settings card, so both columns end together.
+- **Much faster game launch** — the launcher-side preparation now finishes in about a second on an already-installed instance (a `[Hız] Launcher hazırlığı … ms` line is printed to the console):
+  - version and loader JSONs (Minecraft, Fabric loader/profile, Forge promotions, NeoForge metadata) are read from the local cache first instead of hitting the network on every launch;
+  - the resolved Java path and detected major version are persisted in `java-select.properties`, so `java -version` is no longer spawned for every candidate on each start;
+  - ~400 library JARs are no longer SHA-1 hashed on every start — a size/mtime fingerprint in `versions/<id>/.libs-ready` skips verification while it matches;
+  - thousands of assets are skipped through `assets/indexes/<index>.ready` once they have been fully downloaded and verified;
+  - natives extraction checks `.natives-ready` with a cheap size/mtime fingerprint before reading any native JAR.
+- Version bump to **v53** across the launcher and update checks.
 
 ## 🆕 What's new in v52
 
