@@ -1,5 +1,5 @@
 {
-  "version": "57",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v57-Windows.zip",
-  "changelog": "v57: Dar panelde kesilen ve sonuna '...' eklenen yazilar duzeltildi. Maks Performans paneli yeniden duzendi (ACIK/KAPALI anahtari yaziya gore boyutlanir, aciklama ve durum satiri sarar, butonlar tasmaz), sunucu kart butonlari yazi olcusune gore boyutlanir, modpack yerel ice aktar aciklamasi kart genisligine gore sarar. Ortak WrapLabel bileseni eklendi. v56 hiz iyilestirmeleri dahildir."
+  "version": "58",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v58-Windows.zip",
+  "changelog": "v58: Instance'lar sekmesinde kart cogalmasi/titremesi giderildi (EDT + tekilleştirme + hover timer sizintisi), Modlar sekmesinde cift kayit/hayalet satir temizlendi ve secim korunuyor. Forge/NeoForge modlarinin mods.toml/neoforge.mods.toml bildirimleri (zorunlu bagimliliklar, Maven surum araliklari, yanlis loader) artik modlu her acilista kontrol edilir; uyumsuz jar silinmez, .disabled yapilir. v57 metin kirpilmasi duzeltmeleri dahildir."
 }

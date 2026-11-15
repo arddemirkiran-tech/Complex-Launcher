@@ -6,15 +6,21 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
-## ⬇️ Download (Latest: v57)
+## ⬇️ Download (Latest: v58)
 
 | File | Description |
 |---|---|
 | [`Complex-Launcher-Setup.exe`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-Setup.exe) | Windows installer — auto-downloads the latest release, creates shortcuts, checks Java |
-| [`Complex-Launcher-v57-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v57-Windows.zip) | Portable Windows build (bundled runtime) |
-| [`Complex-Launcher-v57-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v57-Linux.zip) | Portable Linux build |
+| [`Complex-Launcher-v58-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v58-Windows.zip) | Portable Windows build (bundled runtime) |
+| [`Complex-Launcher-v58-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v58-Linux.zip) | Portable Linux build |
 
 Website: **https://complexlauncher.gt.tc**
+
+## What's new in v58
+
+- **Instances tab no longer duplicates cards.** The grid was rebuilt from background threads (modpack install, max-performance, instance create/delete); mutating Swing off the EDT left ghost cards stacked on top of each other. Refreshes now always run on the EDT and bursts are coalesced into one rebuild, and names are de-duplicated. The hover animation also allocated a new `Timer` on every mouse-enter and never stopped timers of replaced cards (invisible cards repainting 60x/s); each card now reuses one timer.
+- **Mods tab: no duplicate rows.** Entries with the same jar name (left over from older installs) and rows whose jar no longer exists are filtered out; the selection is restored by file name instead of being reset on every refresh, the list is not rebuilt when the content did not change, and the "no mods yet" placeholder can no longer be toggled/removed as if it were a mod.
+- **Forge/NeoForge metadata is checked before launch.** Only Fabric's `fabric.mod.json` used to be read; now `META-INF/mods.toml` and `META-INF/neoforge.mods.toml` are parsed for mod id, version and **mandatory dependencies**, with Maven version ranges (`[1.20,1.21)`, `[1.20,)`, `(,1.21]`, `[1.20.1]`, multiple ranges, MC-prefixed versions like `1.20.1-14.4.4`, unresolvable `${file.jarVersion}`). Wrong-loader jars (Fabric jar in a Forge instance and vice versa) are reported too. The check now runs on **every modded launch** instead of only when Maximum Performance is on, still cached by `mods/.compat-ready`, and still only disables jars (`.disabled`) instead of deleting them.
 
 ## What's new in v57
 

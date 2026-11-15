@@ -1151,6 +1151,8 @@ extends JPanel {
         for (Object object : list) {
             if (!(object instanceof ModManager.InstalledMod)) continue;
             ModManager.InstalledMod installedMod = (ModManager.InstalledMod)object;
+            // Bos liste yer tutucusu ("Henuz mod yok") gercek bir mod degil.
+            if (installedMod.fileName == null || installedMod.fileName.isBlank()) continue;
             ModManager.setEnabled(file, installedMod, !installedMod.enabled);
         }
         this.refreshInstalled();
@@ -1177,6 +1179,8 @@ extends JPanel {
         for (Object object4 : list) {
             if (!(object4 instanceof ModManager.InstalledMod)) continue;
             ModManager.InstalledMod installedMod = (ModManager.InstalledMod)object4;
+            // Yer tutucu satiri ("Henuz mod yok") kaldirilmaya calisilmasin.
+            if (installedMod.fileName == null || installedMod.fileName.isBlank()) continue;
             ModManager.removeMod(file, installedMod);
         }
         this.refreshInstalled();
@@ -1665,14 +1669,82 @@ extends JPanel {
     }
 
     public void refreshInstalled() {
-        ArrayList<ModManager.InstalledMod> arrayList = new ArrayList<ModManager.InstalledMod>(ModManager.loadRegistry(this.modsDirSupplier.get()));
+        File modsDir = this.modsDirSupplier.get();
+        ArrayList<ModManager.InstalledMod> arrayList = new ArrayList<ModManager.InstalledMod>(ModManager.loadRegistry(modsDir));
+        // BUG FIX: ayni jar icin birden fazla kayit (eski kurulumlardan kalan)
+        // listede cift satir olarak gorunuyordu; diskte olmayan kayitlar da
+        // hayalet satir birakiyordu. Ikisi de burada elenir.
+        java.util.LinkedHashSet<String> seen = new java.util.LinkedHashSet<>();
+        ArrayList<ModManager.InstalledMod> cleaned = new ArrayList<>();
+        for (ModManager.InstalledMod installedMod : arrayList) {
+            if (installedMod == null) {
+                continue;
+            }
+            String key = installedMod.fileName == null ? "" : installedMod.fileName.toLowerCase();
+            if (!key.isEmpty() && !seen.add(key)) {
+                continue;
+            }
+            if (!key.isEmpty() && modsDir != null
+                    && !new File(modsDir, installedMod.fileName).isFile()
+                    && !new File(modsDir, installedMod.fileName + ".disabled").isFile()) {
+                continue;
+            }
+            cleaned.add(installedMod);
+        }
+        arrayList = cleaned;
+        final ArrayList<ModManager.InstalledMod> next = arrayList;
         Runnable runnable = () -> {
+            // Secili modlari koru: liste her tazelendiginde secim sifirlaninca
+            // "Ok/Kapat" gibi islemler yanlis moda uygulanabiliyordu.
+            java.util.Set<String> selectedNames = new java.util.LinkedHashSet<>();
+            for (Object selected : this.installedList.getSelectedValuesList()) {
+                if (selected instanceof ModManager.InstalledMod
+                        && ((ModManager.InstalledMod) selected).fileName != null) {
+                    selectedNames.add(((ModManager.InstalledMod) selected).fileName);
+                }
+            }
+            boolean same = this.installedModel.size() == next.size();
+            if (same) {
+                for (int i = 0; i < next.size(); i++) {
+                    Object current = this.installedModel.get(i);
+                    if (!(current instanceof ModManager.InstalledMod)) {
+                        same = false;
+                        break;
+                    }
+                    ModManager.InstalledMod now = (ModManager.InstalledMod) current;
+                    ModManager.InstalledMod want = next.get(i);
+                    if (!java.util.Objects.equals(now.fileName, want.fileName) || now.enabled != want.enabled) {
+                        same = false;
+                        break;
+                    }
+                }
+            }
+            if (same) {
+                return; // icerik ayni: listeyi bosaltip yeniden doldurma (titreme)
+            }
             this.installedModel.clear();
-            for (ModManager.InstalledMod installedMod : arrayList) {
+            for (ModManager.InstalledMod installedMod : next) {
                 this.installedModel.addElement(installedMod);
             }
             if (this.installedModel.isEmpty()) {
                 this.installedModel.addElement(this.createEmptyPlaceholder("Henuz mod yok. Yukaridaki Arama bolumunden mod ekleyin."));
+            }
+            if (!selectedNames.isEmpty()) {
+                java.util.List<Integer> rows = new java.util.ArrayList<>();
+                for (int i = 0; i < this.installedModel.size(); i++) {
+                    Object row = this.installedModel.get(i);
+                    if (row instanceof ModManager.InstalledMod
+                            && selectedNames.contains(((ModManager.InstalledMod) row).fileName)) {
+                        rows.add(i);
+                    }
+                }
+                int[] indices = new int[rows.size()];
+                for (int i = 0; i < indices.length; i++) {
+                    indices[i] = rows.get(i);
+                }
+                if (indices.length > 0) {
+                    this.installedList.setSelectedIndices(indices);
+                }
             }
         };
         if (SwingUtilities.isEventDispatchThread()) {

@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /api.php
 
 Sitemap: https://complexlauncher.gt.tc/sitemap.xml

@@ -58,7 +58,9 @@ public final class ModCompatibility {
 
     /** Ids provided by the game/loader itself; never "missing". */
     private static final java.util.Set<String> ENVIRONMENT_IDS = new java.util.HashSet<>(java.util.Arrays.asList(
-        "minecraft", "java", "fabricloader", "fabric-loader", "fabric", "fabric-api", "quilt_loader", "quilt-loader"
+        "minecraft", "java", "fabricloader", "fabric-loader", "fabric", "fabric-api", "quilt_loader", "quilt-loader",
+        // Forge/NeoForge kendi altyapi id'lerini de bagimlilik olarak bildirir.
+        "forge", "neoforge", "fml", "minecraft_forge", "minecraft_neoforge", "lowcodefml", "javafml", "mclanguage"
     ));
 
     private ModCompatibility() {
@@ -107,7 +109,7 @@ public final class ModCompatibility {
             }
             metas.add(meta);
             if (!meta.id.isEmpty()) {
-                byId.putIfAbsent(meta.id, meta);
+                byId.putIfAbsent(meta.id.toLowerCase(), meta);
             }
         }
         // fabric-api gibi "bundle" jar'lar onlarca modul id'si saglar
@@ -117,17 +119,23 @@ public final class ModCompatibility {
         Map<String, String> providedVersions = new LinkedHashMap<>();
         for (ModMeta meta : metas) {
             for (Map.Entry<String, String> p : meta.provides.entrySet()) {
-                providedVersions.putIfAbsent(p.getKey(), p.getValue().isEmpty() ? meta.version : p.getValue());
+                providedVersions.putIfAbsent(p.getKey().toLowerCase(), p.getValue().isEmpty() ? meta.version : p.getValue());
             }
         }
 
         String want = loader == null ? "" : loader.toLowerCase();
         boolean instanceFabric = want.contains("fabric") || want.contains("quilt");
-        boolean instanceForge = want.contains("neoforge") || want.contains("forge");
+        boolean instanceNeoForge = want.contains("neoforge");
+        boolean instanceForge = !instanceNeoForge && want.contains("forge");
         for (ModMeta meta : metas) {
             if (!meta.format.isEmpty()) {
                 boolean jarFabric = "fabric".equals(meta.format);
-                if ((instanceFabric && !jarFabric) || (instanceForge && jarFabric)) {
+                // v57: NeoForge jar'lari Forge instance'inda YUKLENMEZ (ve tersi);
+                // eskiden yalnizca fabric/forge ayrimi vardi.
+                boolean wrongLoader = (instanceFabric && !jarFabric)
+                    || (instanceNeoForge && !"neoforge".equals(meta.format))
+                    || (instanceForge && !"forge".equals(meta.format));
+                if (wrongLoader) {
                     problems.add(new Problem(meta.fileName, meta.id,
                         meta.fileName + " is a " + meta.format + " jar but the instance runs "
                             + loader + " - the loader cannot see it, so its dependencies look missing"));
@@ -139,9 +147,9 @@ public final class ModCompatibility {
                 if (ENVIRONMENT_IDS.contains(depId) || depId.equals(meta.id)) {
                     continue;
                 }
-                ModMeta installed = byId.get(depId);
+                ModMeta installed = byId.get(depId.toLowerCase());
                 if (installed == null) {
-                    if (providedVersions.containsKey(depId)) {
+                    if (providedVersions.containsKey(depId.toLowerCase())) {
                         continue; // baska bir jar bu id'yi sagliyor (Fabric API vb.)
                     }
                     problems.add(new Problem(meta.fileName, meta.id,
@@ -149,7 +157,7 @@ public final class ModCompatibility {
                             + joinRanges(dep.getValue()) + ", which is missing"));
                     continue;
                 }
-                if (!matchesAny(installed.version, dep.getValue())) {
+                if (!matchesRange(meta.format, installed.version, dep.getValue())) {
                     problems.add(new Problem(meta.fileName, meta.id,
                         meta.fileName + " (" + meta.id + ") requires " + depId + " "
                             + joinRanges(dep.getValue()) + ", but " + installed.version + " is installed"));
@@ -160,8 +168,8 @@ public final class ModCompatibility {
                 if (ENVIRONMENT_IDS.contains(badId) || badId.equals(meta.id)) {
                     continue;
                 }
-                ModMeta installed = byId.get(badId);
-                if (installed != null && matchesAny(installed.version, bad.getValue())) {
+                ModMeta installed = byId.get(badId.toLowerCase());
+                if (installed != null && matchesRange(meta.format, installed.version, bad.getValue())) {
                     problems.add(new Problem(meta.fileName, meta.id,
                         meta.fileName + " (" + meta.id + ") is incompatible with " + badId + " "
                             + joinRanges(bad.getValue()) + ", but " + installed.version + " is installed"));
@@ -241,16 +249,10 @@ public final class ModCompatibility {
             if (entry == null) {
                 // Fabric degil: yalnizca formati kaydet (loader uyusmazligi icin).
                 if (zip.getEntry("META-INF/neoforge.mods.toml") != null) {
-                    ModMeta forge = new ModMeta();
-                    forge.fileName = jar.getName();
-                    forge.format = "neoforge";
-                    return forge;
+                    return readToml(jar, zip, "META-INF/neoforge.mods.toml", "neoforge");
                 }
                 if (zip.getEntry("META-INF/mods.toml") != null) {
-                    ModMeta forge = new ModMeta();
-                    forge.fileName = jar.getName();
-                    forge.format = "forge";
-                    return forge;
+                    return readToml(jar, zip, "META-INF/mods.toml", "forge");
                 }
                 return null;
             }
@@ -284,6 +286,295 @@ public final class ModCompatibility {
                 }
             }
         }
+    }
+
+    /** Surum aralik bicimi jar'in formatina gore degisir (Fabric "1.0.0", Forge "[1.0,2.0)"). */
+    private static boolean matchesRange(String format, String installedVersion, String[] ranges) {
+        if (ranges == null || ranges.length == 0) {
+            return true;
+        }
+        for (String range : ranges) {
+            boolean ok = "fabric".equals(format)
+                ? rangeMatches(installedVersion, range)
+                : forgeRangeMatches(installedVersion, range);
+            if (ok) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Virgulle ayrilmis coklu Forge araliklarini tek tek ayirir. */
+    private static List<String> splitForgeRanges(String range) {
+        List<String> out = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        for (int i = 0; i < range.length(); i++) {
+            char c = range.charAt(i);
+            if (c == ',') {
+                int j = i + 1;
+                while (j < range.length() && Character.isWhitespace(range.charAt(j))) {
+                    j++;
+                }
+                if (j < range.length() && (range.charAt(j) == '[' || range.charAt(j) == '(')) {
+                    out.add(current.toString().trim());
+                    current.setLength(0);
+                    i = j - 1;
+                    continue;
+                }
+            }
+            current.append(c);
+        }
+        if (current.length() > 0) {
+            out.add(current.toString().trim());
+        }
+        return out;
+    }
+
+    /**
+     * Forge/NeoForge (Maven) surum araligi: {@code [1.20,1.21)}, {@code [1.20,)},
+     * {@code (,1.21]}, {@code [1.20.1]} veya duz {@code 1.20.1}. Tek satirda
+     * birden fazla aralik varsa ({@code [46,47.1.3),[47.1.43,)}) hepsi denenir.
+     */
+    static boolean forgeRangeMatches(String installedVersion, String range) {
+        if (range == null) {
+            return true;
+        }
+        String r = range.trim();
+        if (r.isEmpty() || "*".equals(r) || "any".equalsIgnoreCase(r)) {
+            return true;
+        }
+        // Ayni dependency satirinda birden fazla aralik olabilir:
+        // "[46,47.1.3),[47.1.43,)" -> iki ayri aralik, biri uyarsa yeter.
+        List<String> parts = splitForgeRanges(r);
+        if (parts.size() > 1) {
+            for (String part : parts) {
+                if (forgeRangeMatches(installedVersion, part)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        List<int[]> candidates = versionCandidates(installedVersion);
+        if (candidates.isEmpty()) {
+            // ${file.jarVersion} gibi cozumlenemeyen surum: yanlis pozitif uretme.
+            return true;
+        }
+        for (int[] v : candidates) {
+            if (forgeRangeVariant(v, r)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Forge jar'larinin surumu cogu zaman MC surumuyle oneklenir
+     * ("1.20.1-14.4.4", "0.4.2+1.20.1-forge"). Bu yuzden ayni jar icin birkac
+     * olasi surum okumasi denenir; biri araliga uyarsa uyumlu sayilir.
+     */
+    private static List<int[]> versionCandidates(String version) {
+        List<int[]> out = new ArrayList<>();
+        if (version == null) {
+            return out;
+        }
+        String v = version.trim();
+        int[] full = versionParts(v);
+        if (full.length > 0) {
+            out.add(full);
+            if (full.length > 1) {
+                int[] lastOnly = new int[]{full[full.length - 1]};
+                out.add(lastOnly);
+            }
+        }
+        if (v.indexOf('-') >= 0) {
+            int[] afterFirstDash = versionParts(v.substring(v.indexOf('-') + 1));
+            if (afterFirstDash.length > 0 && !sameParts(out, afterFirstDash)) {
+                out.add(afterFirstDash);
+            }
+            int[] afterLastDash = versionParts(v.substring(v.lastIndexOf('-') + 1));
+            if (afterLastDash.length > 0 && !sameParts(out, afterLastDash)) {
+                out.add(afterLastDash);
+            }
+        }
+        return out;
+    }
+
+    private static boolean sameParts(List<int[]> list, int[] candidate) {
+        for (int[] existing : list) {
+            if (java.util.Arrays.equals(existing, candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean forgeRangeVariant(int[] v, String r) {
+        char first = r.charAt(0);
+        char last = r.charAt(r.length() - 1);
+        if (first != '[' && first != '(') {
+            int[] want = versionParts(r);
+            return want.length == 0 || prefixMatch(v, want);
+        }
+        boolean closed = last == ']' || last == ')';
+        String body = r.substring(1, closed ? r.length() - 1 : r.length());
+        int comma = body.indexOf(',');
+        if (comma < 0) {
+            int[] only = versionParts(body);
+            return only.length == 0 || prefixMatch(v, only);
+        }
+        String low = body.substring(0, comma).trim();
+        String high = body.substring(comma + 1).trim();
+        if (!low.isEmpty()) {
+            int c = compare(v, versionParts(low));
+            if (first == '[' ? c < 0 : c <= 0) {
+                return false;
+            }
+        }
+        if (!high.isEmpty()) {
+            int c = compare(v, versionParts(high));
+            if (last == ']' ? c > 0 : c >= 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean prefixMatch(int[] v, int[] want) {
+        for (int i = 0; i < want.length; i++) {
+            int x = i < v.length ? v[i] : 0;
+            if (x != want[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * v57: Forge/NeoForge jarlarinin {@code mods.toml} / {@code neoforge.mods.toml}
+     * dosyasindan mod kimligi, surumu ve ZORUNLU bagimliliklarini okur. Eskiden bu
+     * jarlar "format bilinmiyor" diye tamamen atlaniyordu; Forge oyunlari uyumsuz
+     * bagimlilik yuzunden cokuyor ama launcher bunu goremiyordu.
+     */
+    private static ModMeta readToml(File jar, ZipFile zip, String entryName, String format) {
+        ModMeta meta = new ModMeta();
+        meta.fileName = jar.getName();
+        meta.format = format;
+        String text = readEntryText(zip, entryName);
+        if (text == null) {
+            return meta;
+        }
+        String section = "";
+        String depId = null;
+        String depRange = null;
+        Boolean depRequired = null;
+        for (String rawLine : text.split("\\R")) {
+            String line = stripTomlComment(rawLine).trim();
+            if (line.isEmpty()) {
+                continue;
+            }
+            if (line.startsWith("[[") || line.startsWith("[")) {
+                // Onceki dependency blogunu kapat.
+                addTomlDep(meta, depId, depRange, depRequired);
+                depId = null;
+                depRange = null;
+                depRequired = null;
+                String name = line.replace("[", "").replace("]", "").trim();
+                if (name.startsWith("dependencies.")) {
+                    section = "dep";
+                } else if ("mods".equals(name)) {
+                    section = "mods";
+                } else {
+                    section = "";
+                }
+                continue;
+            }
+            int eq = line.indexOf('=');
+            if (eq <= 0) {
+                continue;
+            }
+            String key = line.substring(0, eq).trim();
+            String value = unquote(line.substring(eq + 1).trim());
+            if ("dep".equals(section)) {
+                if ("modId".equals(key)) {
+                    depId = value;
+                } else if ("versionRange".equals(key)) {
+                    depRange = value;
+                } else if ("mandatory".equals(key)) {
+                    depRequired = Boolean.valueOf("true".equalsIgnoreCase(value));
+                } else if ("type".equals(key)) {
+                    depRequired = Boolean.valueOf("required".equalsIgnoreCase(value));
+                }
+            } else if ("mods".equals(section)) {
+                if ("modId".equals(key) && meta.id.isEmpty()) {
+                    meta.id = value;
+                } else if ("version".equals(key) && meta.version.isEmpty()) {
+                    meta.version = value;
+                }
+            }
+        }
+        addTomlDep(meta, depId, depRange, depRequired);
+        meta.readable = !meta.id.isEmpty();
+        return meta;
+    }
+
+    private static void addTomlDep(ModMeta meta, String depId, String depRange, Boolean required) {
+        if (depId == null || depId.isEmpty() || depId.equalsIgnoreCase(meta.id)) {
+            return;
+        }
+        // mandatory/type belirtilmemisse Forge varsayilani "zorunlu".
+        if (Boolean.FALSE.equals(required)) {
+            return;
+        }
+        meta.depends.put(depId, new String[]{depRange == null || depRange.isEmpty() ? "*" : depRange});
+    }
+
+    private static String readEntryText(ZipFile zip, String entryName) {
+        java.io.InputStream in = null;
+        try {
+            ZipEntry entry = zip.getEntry(entryName);
+            if (entry == null) {
+                return null;
+            }
+            in = zip.getInputStream(entry);
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) {
+                out.write(buf, 0, n);
+            }
+            return new String(out.toByteArray(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return null;
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (Exception ignored) {
+                    // onemsiz
+                }
+            }
+        }
+    }
+
+    private static String stripTomlComment(String line) {
+        boolean inString = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '"') {
+                inString = !inString;
+            } else if (c == '#' && !inString) {
+                return line.substring(0, i);
+            }
+        }
+        return line;
+    }
+
+    private static String unquote(String value) {
+        String v = value.trim();
+        if (v.length() >= 2 && v.charAt(0) == '"' && v.charAt(v.length() - 1) == '"') {
+            return v.substring(1, v.length() - 1).replace("\\\"", "\"");
+        }
+        return v;
     }
 
     private static String optString(JsonObject o, String key) {

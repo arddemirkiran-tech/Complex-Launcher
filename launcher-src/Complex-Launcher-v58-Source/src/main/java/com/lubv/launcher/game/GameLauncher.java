@@ -344,7 +344,16 @@ public class GameLauncher {
         // Aksi halde Fabric "Incompatible mods found" ile oyunu hic acmiyor.
         try {
             com.lubv.launcher.core.Settings perfSettings = com.lubv.launcher.core.Settings.load();
-            if (perfSettings != null && perfSettings.maxPerformanceMode) {
+            // v57: uyumluluk kontrolu artik yalnizca Maks Performans acikken degil,
+            // MODLU her acilista yapilir (Fabric/Forge/NeoForge/Quilt). Jar'larin
+            // kendi JSON/TOML bildirimleri oyunu cokertmeden once dogrulanir.
+            String compatLoaderName = effectiveLoader == null ? "" : effectiveLoader.toLowerCase();
+            boolean compatModded = compatLoaderName.contains("fabric") || compatLoaderName.contains("forge")
+                || compatLoaderName.contains("quilt");
+            File compatProbe = new File(file, "mods");
+            File[] compatProbeJars = compatModded
+                ? compatProbe.listFiles((d, n) -> n.toLowerCase().endsWith(".jar")) : null;
+            if (compatProbeJars != null && compatProbeJars.length > 0) {
                 // v56 HIZ: uyumluluk taramasi her mod JAR'ini acip metadata
                 // okuyor (100+ modda 1-3 s). Artik mods/ klasorunun
                 // ad+boyut+mtime parmak izi .compat-ready isaretinde tutulur;

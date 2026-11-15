@@ -766,12 +766,34 @@ extends JFrame {
         return jPanel;
     }
 
+    /** Ayni anda gelen cok sayida tazeleme istegini tek bir yeniden cizime indirger. */
+    private final java.util.concurrent.atomic.AtomicBoolean instancesRefreshPending = new java.util.concurrent.atomic.AtomicBoolean(false);
+
     private void refreshInstancesGrid() {
         if (this.instancesGridPanel == null) {
             return;
         }
+        // BUG FIX: bazi cagiranlar arka plan thread'inden geliyor (modpack
+        // kurulumu, maks performans, instance silme/olusturma). Swing
+        // bilesenleri EDT disinda degistirilince kartlar cogaliyor, hayalet
+        // ve ust uste binen kartlar kaliyor, liste titriyordu.
+        if (!SwingUtilities.isEventDispatchThread()) {
+            if (this.instancesRefreshPending.compareAndSet(false, true)) {
+                SwingUtilities.invokeLater(() -> {
+                    this.instancesRefreshPending.set(false);
+                    this.refreshInstancesGrid();
+                });
+            }
+            return;
+        }
         this.instancesGridPanel.removeAll();
+        java.util.LinkedHashSet<String> seen = new java.util.LinkedHashSet<>();
         for (String string : InstanceManager.listNames()) {
+            // Ayni isim iki kez eklenirse ayni instance iki kart olarak
+            // gorunuyordu ("dupeleniyor" olarak yansiyan hata).
+            if (!seen.add(string.toLowerCase())) {
+                continue;
+            }
             this.instancesGridPanel.add(new InstanceCard(Instance.load(string)));
         }
         this.instancesGridPanel.add(new NewInstanceCard());
@@ -11182,6 +11204,9 @@ extends JFrame {
         private boolean hover;
         private boolean pressed;
         private float hoverAnim = 0.0f;
+        private float hoverFrom = 0.0f;
+        private float hoverTarget = 0.0f;
+        private long hoverStartMs = 0L;
         private Timer hoverTimer;
         private static final int SIZE = 110;
         private static final int RADIUS = 16;
@@ -11259,23 +11284,30 @@ extends JFrame {
             });
         }
 
-        /** Hover durumuna yumusak (easing) bir gecis animasyonu uygular - premium his icin. */
+        /**
+         * Hover durumuna yumusak (easing) gecis uygular.
+         *
+         * BUG FIX: her fare girisinde YENI bir Swing Timer yaratiliyordu; kart
+         * listesi yenilendiginde eski kartlarin timer'lari durdurulmadigi icin
+         * gorunmeyen bilesenler saniyede 60 kez repaint ediliyordu (donma,
+         * titreme). Artik kart basina tek bir timer yeniden kullanilir.
+         */
         private void animateHover(float target) {
-            if (this.hoverTimer != null) {
-                this.hoverTimer.stop();
+            if (this.hoverTimer == null) {
+                this.hoverTimer = new Timer(16, e -> {
+                    float progress = Math.min(1.0f, (System.currentTimeMillis() - this.hoverStartMs) / 160.0f);
+                    float eased = 1.0f - (float)Math.pow(1.0 - progress, 3);
+                    this.hoverAnim = this.hoverFrom + (this.hoverTarget - this.hoverFrom) * eased;
+                    this.repaint();
+                    if (progress >= 1.0f) {
+                        ((Timer)e.getSource()).stop();
+                    }
+                });
             }
-            float start = this.hoverAnim;
-            long startTime = System.currentTimeMillis();
-            this.hoverTimer = new Timer(16, null);
-            this.hoverTimer.addActionListener(e -> {
-                float progress = Math.min(1.0f, (System.currentTimeMillis() - startTime) / 160.0f);
-                float eased = 1.0f - (float)Math.pow(1.0 - progress, 3);
-                this.hoverAnim = start + (target - start) * eased;
-                this.repaint();
-                if (progress >= 1.0f) {
-                    ((Timer)e.getSource()).stop();
-                }
-            });
+            this.hoverTimer.stop();
+            this.hoverFrom = this.hoverAnim;
+            this.hoverTarget = target;
+            this.hoverStartMs = System.currentTimeMillis();
             this.hoverTimer.start();
         }
 
