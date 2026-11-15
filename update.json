@@ -1,5 +1,5 @@
 {
-  "version": "59",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v59-Windows.zip",
-  "changelog": "v59: Modlar sayfasinda fare gezdirince olusan tooltip yigilmasi (liste 'dupeleniyor/bozuluyor' gorunumu) giderildi; tooltip artik Swing'in kendi getToolTipText mekanizmasiyla uretiliyor. Ayrica launcher'in sessizce acilmama hatasi duzeltildi (zaten calisiyor mesaji gosterilmeden System.exit cagriliyordu) ve oyun/sunucu acikken kalan launcher.lock kilidi artik acilisi engellemiyor. v58 instance/mod liste duzeltmeleri ve Forge/NeoForge metadata kontrolu dahildir."
+  "version": "60",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v60-Windows.zip",
+  "changelog": "v60: Shader, Doku Paketi ve Modpack arama listelerindeki tooltip yigilmasi (fare gezinirken liste bozuluyor/dupeleniyor gorunumu) giderildi; mod ac/kapat artik dogru dosya adini kullaniyor ve kilitli dosyada sessizce yanlis durum kaydetmiyor; ZIP ice aktarma yol kontrolu kardes klasore yazmayi engelliyor; guncelleme surum karsilastirmasi bozuk etiketlerde cokmuyor."
 }

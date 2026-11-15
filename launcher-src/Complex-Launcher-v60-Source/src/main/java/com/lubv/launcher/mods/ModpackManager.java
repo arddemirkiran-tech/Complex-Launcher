@@ -320,13 +320,20 @@ public final class ModpackManager {
         f.delete();
     }
 
-    private static File safeResolve(File base, String name) {
-        File f = new File(base, name).getAbsoluteFile();
-        String basePath = base.getAbsolutePath();
-        if (!f.getPath().startsWith(basePath)) {
-            throw new IllegalArgumentException("Ge\u00e7ersiz ar\u015fiv yolu: " + name);
+        private static File safeResolve(File base, String name) {
+        try {
+            File root = base.getCanonicalFile();
+            File target = new File(root, name).getCanonicalFile();
+            // ESKI BUG: "startsWith(basePath)" kardes klasore ("foo" -> "foo-2")
+            // yazmaya izin veriyordu; ayirici kontrole gecildi.
+            if (!target.equals(root) && !target.getPath().startsWith(root.getPath() + File.separator)) {
+                throw new IllegalArgumentException("Geçersiz arşiv yolu: " + name);
+            }
+            return target;
         }
-        return f;
+        catch (IOException exception) {
+            throw new IllegalArgumentException("Geçersiz arşiv yolu: " + name, exception);
+        }
     }
 
     public static class ModpackInfo {

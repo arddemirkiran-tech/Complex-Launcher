@@ -6,15 +6,22 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
-## ⬇️ Download (Latest: v59)
+## ⬇️ Download (Latest: v60)
 
 | File | Description |
 |---|---|
 | [`Complex-Launcher-Setup.exe`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-Setup.exe) | Windows installer — auto-downloads the latest release, creates shortcuts, checks Java |
-| [`Complex-Launcher-v59-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v59-Windows.zip) | Portable Windows build (bundled runtime) |
-| [`Complex-Launcher-v59-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v59-Linux.zip) | Portable Linux build |
+| [`Complex-Launcher-v60-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v60-Windows.zip) | Portable Windows build (bundled runtime) |
+| [`Complex-Launcher-v60-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v60-Linux.zip) | Portable Linux build |
 
 Website: **https://complexlauncher.gt.tc**
+
+## What's new in v60
+
+- **Same tooltip bug fixed on the other three list pages.** Shaders, Resource Packs and Modpacks search lists still called `setToolTipText(...)` on every `mouseMoved`, which made Swing rebuild the popup and left overlapping tooltips that looked like a duplicating list. The listeners are gone; tooltips now come from Swing's own `getToolTipText(MouseEvent)` via the shared `ListTips` helper (shader and resource pack results also got title + description tooltips).
+- **Enable/disable on a mod was reporting a state that never happened.** A name already ending in `.disabled` got a second `.disabled` appended, so nothing was renamed while the registry still recorded "disabled" - the mod kept loading in game. A failed `renameTo` (file locked by a running game) was ignored the same way. The name is normalised now, `Files.move` is used as a fallback, and failures show a "file is in use" warning instead of a fake state.
+- **ZIP import path check allowed sibling folders.** `safeResolve` only compared `startsWith(basePath)`, so `/instances/foo` also matched `/instances/foo-bar` and an entry like `../foo-bar/x` could write into another instance. Canonical path plus separator check is used for instance import and modpack installs.
+- **Update version comparison could crash.** A tag like `1..2` threw `NumberFormatException`; version parts are parsed safely now.
 
 ## What's new in v59
 

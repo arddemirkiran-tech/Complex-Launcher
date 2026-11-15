@@ -1152,12 +1152,22 @@ extends JPanel {
             return;
         }
         File file = this.modsDirSupplier.get();
+        int failed = 0;
         for (Object object : list) {
             if (!(object instanceof ModManager.InstalledMod)) continue;
             ModManager.InstalledMod installedMod = (ModManager.InstalledMod)object;
             // Bos liste yer tutucusu ("Henuz mod yok") gercek bir mod degil.
             if (installedMod.fileName == null || installedMod.fileName.isBlank()) continue;
-            ModManager.setEnabled(file, installedMod, !installedMod.enabled);
+            if (!ModManager.setEnabled(file, installedMod, !installedMod.enabled)) {
+                ++failed;
+            }
+        }
+        if (failed > 0) {
+            // Dosya kilitliyse (oyun acikken) eskiden hicbir sey soylenmiyordu:
+            // kullanici mod kapandi saniyordu.
+            JOptionPane.showMessageDialog(this, L10n.isEnglish()
+                ? failed + " mod(s) could not be enabled/disabled because the file is in use. Close the game and try again."
+                : failed + " mod acilip/kapatilamadi; dosya kullanimda. Oyunu kapatip tekrar deneyin.");
         }
         this.refreshInstalled();
     }

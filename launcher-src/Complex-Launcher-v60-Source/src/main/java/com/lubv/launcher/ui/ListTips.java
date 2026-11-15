@@ -2,6 +2,7 @@ package com.lubv.launcher.ui;
 
 import com.lubv.launcher.mods.ModManager;
 import com.lubv.launcher.mods.ModSearchHit;
+import com.lubv.launcher.mods.ModrinthApi;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import javax.swing.JList;
@@ -44,6 +45,14 @@ final class ListTips {
                 desc = desc.substring(0, 157) + "\u2026";
             }
             return "<html><b>" + esc(hit.title) + "</b><br>" + esc(desc) + "</html>";
+        }
+        if (item instanceof ModrinthApi.ModResult) {
+            ModrinthApi.ModResult result = (ModrinthApi.ModResult) item;
+            String desc = result.description == null ? "" : result.description;
+            if (desc.length() > 160) {
+                desc = desc.substring(0, 157) + "…";
+            }
+            return "<html><b>" + esc(result.title) + "</b><br>" + esc(desc) + "</html>";
         }
         if (item instanceof ModManager.InstalledMod) {
             ModManager.InstalledMod mod = (ModManager.InstalledMod) item;

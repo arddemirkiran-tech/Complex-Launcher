@@ -334,7 +334,6 @@ extends JPanel {
         this.searchResultsList.setCellRenderer(new ShaderCellRenderer());
         this.searchResultsList.setFixedCellHeight(56);
         this.searchResultsList.setSelectionMode(0);
-        this.installHoverTooltip(this.searchResultsList);
         this.galleryStrip = new GalleryStrip();
         this.galleryStrip.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
         this.searchResultsList.addListSelectionListener(listSelectionEvent -> {
@@ -635,48 +634,6 @@ extends JPanel {
         graphics2D.drawString(string, (36 - fontMetrics.stringWidth(string)) / 2, (36 + fontMetrics.getAscent()) / 2 - 3);
         graphics2D.dispose();
         return new ImageIcon(bufferedImage);
-    }
-
-    /** v51 GUI BUG FIX: tooltip yalnizca satir degisince guncellenir (dupelenme/glitch). */
-    private void installHoverTooltip(final JList<?> jList) {
-        final int[] lastRow = { -1 };
-        jList.addMouseMotionListener(new MouseMotionAdapter(){
-
-            @Override
-            public void mouseMoved(MouseEvent mouseEvent) {
-                int n = jList.locationToIndex(mouseEvent.getPoint());
-                if (n >= 0) {
-                    java.awt.Rectangle bounds = jList.getCellBounds(n, n);
-                    if (bounds == null || !bounds.contains(mouseEvent.getPoint())
-                        || n >= jList.getModel().getSize()) {
-                        n = -1;
-                    }
-                }
-                if (n == lastRow[0]) {
-                    return;
-                }
-                lastRow[0] = n;
-                if (n < 0) {
-                    jList.setToolTipText(null);
-                    return;
-                }
-                Object e = jList.getModel().getElementAt(n);
-                if (e instanceof ModrinthApi.ModResult) {
-                    ModrinthApi.ModResult modResult = (ModrinthApi.ModResult)e;
-                    jList.setToolTipText("<html><b>" + ShaderPanel.escapeHtml(modResult.title) + "</b><br>" + ShaderPanel.escapeHtml(modResult.description) + "</html>");
-                } else {
-                    jList.setToolTipText(null);
-                }
-            }
-        });
-        jList.addMouseListener(new MouseAdapter(){
-
-            @Override
-            public void mouseExited(MouseEvent mouseEvent) {
-                lastRow[0] = -1;
-                jList.setToolTipText(null);
-            }
-        });
     }
 
     private static String escapeHtml(String string) {

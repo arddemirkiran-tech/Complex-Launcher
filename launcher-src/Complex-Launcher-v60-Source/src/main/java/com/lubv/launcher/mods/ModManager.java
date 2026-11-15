@@ -1093,19 +1093,44 @@ public class ModManager {
         }
     }
 
-    public static void setEnabled(File modsDir, InstalledMod mod, boolean enabled) {
-        File current = new File(modsDir, (String)(mod.enabled ? mod.fileName : mod.fileName + ".disabled"));
-        File target = new File(modsDir, (String)(enabled ? ModManager.stripDisabled(mod.fileName) : mod.fileName + ".disabled"));
-        if (current.exists() && !current.equals(target)) {
-            current.renameTo(target);
+        public static boolean setEnabled(File modsDir, InstalledMod mod, boolean enabled) {
+        // ESKI BUG 1: dosya adi zaten ".disabled" ile bitiyorsa ve mod kapali
+        // gorunuyorsa "x.jar.disabled.disabled" aranip hicbir sey yapilmiyor,
+        // sonra kayit "devre disi" yaziliyordu -> mod yuklenmeye devam ederdi.
+        // ESKI BUG 2: renameTo'nun sonucu yok sayiliyordu; dosya oyun/antivirus
+        // tarafindan tutuluyorsa UI yine de yeni durumu kaydediyordu.
+        String plain = stripDisabled(mod.fileName == null ? "" : mod.fileName);
+        if (plain.isEmpty()) {
+            return false;
         }
+        File current = new File(modsDir, mod.enabled ? plain : plain + ".disabled");
+        File target = new File(modsDir, enabled ? plain : plain + ".disabled");
+        if (current.exists() && !current.equals(target)) {
+            boolean moved = current.renameTo(target);
+            if (!moved) {
+                try {
+                    java.nio.file.Files.move(current.toPath(), target.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    moved = true;
+                }
+                catch (Exception exception) {
+                    moved = false;
+                }
+            }
+            if (!moved) {
+                return false;
+            }
+        }
+        mod.fileName = target.getName();
         mod.enabled = enabled;
         List<InstalledMod> mods = ModManager.loadRegistry(modsDir);
         for (InstalledMod m : mods) {
-            if (!m.fileName.equals(mod.fileName)) continue;
+            if (m.fileName == null || !stripDisabled(m.fileName).equals(plain)) continue;
+            m.fileName = target.getName();
             m.enabled = enabled;
         }
         ModManager.saveRegistry(modsDir, mods);
+        return true;
     }
 
     private static String stripDisabled(String name) {

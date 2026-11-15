@@ -26,7 +26,7 @@ public class UpdateManager {
     private static final String GITHUB_OWNER = "arddemirkiran-tech";
     private static final String GITHUB_REPO = "Complex-Launcher";
     private static final String GITHUB_API_URL = "https://api.github.com/repos/arddemirkiran-tech/Complex-Launcher/releases/latest";
-    public static final String CURRENT_VERSION = "59";
+    public static final String CURRENT_VERSION = "60";
     /**
      * v49 TEST build: shown in the title bar and splash so this build is never
      * confused with the stable v49 package. Empty string = stable labelling.
@@ -524,13 +524,22 @@ public class UpdateManager {
             String[] p2 = c2.split("\\.");
             int len = Math.max(p1.length, p2.length);
             for (int i = 0; i < len; ++i) {
-                int b;
-                int a = i < p1.length ? Integer.parseInt(p1[i]) : 0;
-                int n = b = i < p2.length ? Integer.parseInt(p2[i]) : 0;
+                int a = i < p1.length ? UpdateInfo.parseIntSafe(p1[i]) : 0;
+                int b = i < p2.length ? UpdateInfo.parseIntSafe(p2[i]) : 0;
                 if (a == b) continue;
                 return Integer.compare(a, b);
             }
             return 0;
+        }
+
+        /** "1..2" gibi surumlerde bos parca NumberFormatException atiyordu. */
+        private static int parseIntSafe(String part) {
+            try {
+                return part == null || part.isEmpty() ? 0 : Integer.parseInt(part.trim());
+            }
+            catch (NumberFormatException exception) {
+                return 0;
+            }
         }
     }
 }

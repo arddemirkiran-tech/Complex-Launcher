@@ -209,7 +209,6 @@ extends JPanel {
         this.resultsList.setBackground(Theme.BG_BASE);
         this.resultsList.setOpaque(true);
         this.resultsList.setBorder(BorderFactory.createEmptyBorder());
-        this.installHoverTooltip(this.resultsList);
         // Cift tiklayinca mod bilgisi detay panelini ac (Modlar sekmesindeki gibi).
         this.resultsList.addMouseListener(new java.awt.event.MouseAdapter(){
             @Override
@@ -926,54 +925,6 @@ extends JPanel {
         graphics2D.drawString("?", (36 - fontMetrics.stringWidth("?")) / 2, (36 + fontMetrics.getAscent()) / 2 - 3);
         graphics2D.dispose();
         return new ImageIcon(bufferedImage);
-    }
-
-    /**
-     * v51 GUI BUG FIX (Mods sekmesiyle ayni): tooltip yalnizca hover edilen
-     * SATIR degistiginde guncellenir. Eskiden her mouse-moved olayinda
-     * setToolTipText cagriliyordu; Swing her cagrida yeni bir tooltip penceresi
-     * kurdugu icin imlec gezerken tooltipler ust uste binip "dupeleniyor" gibi
-     * gorunuyor, bos alanda da son tooltip asili kaliyordu.
-     */
-    private void installHoverTooltip(final JList<?> jList) {
-        final int[] lastRow = { -1 };
-        jList.addMouseMotionListener(new MouseMotionAdapter(){
-
-            @Override
-            public void mouseMoved(MouseEvent mouseEvent) {
-                int n = jList.locationToIndex(mouseEvent.getPoint());
-                if (n >= 0) {
-                    java.awt.Rectangle bounds = jList.getCellBounds(n, n);
-                    if (bounds == null || !bounds.contains(mouseEvent.getPoint())
-                        || n >= jList.getModel().getSize()) {
-                        n = -1;
-                    }
-                }
-                if (n == lastRow[0]) {
-                    return;
-                }
-                lastRow[0] = n;
-                if (n < 0) {
-                    jList.setToolTipText(null);
-                    return;
-                }
-                Object e = jList.getModel().getElementAt(n);
-                if (e instanceof ModSearchHit) {
-                    ModSearchHit modSearchHit = (ModSearchHit)e;
-                    jList.setToolTipText("<html><b>" + ModpacksPanel.esc(modSearchHit.title) + "</b><br>" + ModpacksPanel.esc(modSearchHit.description) + "</html>");
-                } else {
-                    jList.setToolTipText(null);
-                }
-            }
-        });
-        jList.addMouseListener(new MouseAdapter(){
-
-            @Override
-            public void mouseExited(MouseEvent mouseEvent) {
-                lastRow[0] = -1;
-                jList.setToolTipText(null);
-            }
-        });
     }
 
     private static String esc(String string) {
