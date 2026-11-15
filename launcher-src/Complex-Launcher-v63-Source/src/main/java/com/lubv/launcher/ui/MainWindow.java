@@ -346,6 +346,16 @@ extends JFrame {
             // empty catch block
         }
         this.setDefaultCloseOperation(3);
+        // OYNama suresi: oyun acikken launcher kapatilirsa sure kayboluyordu.
+        // Onceki oturumdan kalan isaretcileri kurtar, kapanistan once de
+        // yarim kalan oturumun suresini yaz.
+        com.lubv.launcher.core.PlayTimeTracker.recoverAll();
+        this.addWindowListener(new java.awt.event.WindowAdapter(){
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                com.lubv.launcher.core.PlayTimeTracker.finishRunningSessions();
+            }
+        });
         this.setSize(this.settings.windowWidth, this.settings.windowHeight);
         this.setMinimumSize(new Dimension(980, 660));
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -2181,7 +2191,7 @@ extends JFrame {
             setLabelIfChanged(chipLoader, ld == null ? "Vanilla" : ld);
             setLabelIfChanged(chipRam, (this.ramSlider != null ? this.ramSlider.getValue() : 0) + " GB RAM");
             long secs = inst != null ? inst.totalPlaySeconds : 0L;
-            setLabelIfChanged(chipPlayed, secs <= 0 ? (en ? "Not played yet" : "Hen\u00fcz oynanmad\u0131") : (secs / 3600) + "h " + ((secs % 3600) / 60) + "m");
+            setLabelIfChanged(chipPlayed, MainWindow.compactPlayTime(secs, en));
         });
         heroTimer.setInitialDelay(50);
         heroTimer.start();
@@ -2322,7 +2332,10 @@ extends JFrame {
             recent.refresh();
             long total = 0; int count = 0;
             for (String nm : InstanceManager.listNames()) { count++; total += Instance.load(nm).totalPlaySeconds; }
-            statTime.setValue(total >= 3600 ? (total / 3600) + "h" : (total / 60) + "m");
+            // Saat basina dakikayi da goster: "2h" yerine "2h 15m".
+            statTime.setValue(total >= 3600
+                ? (total / 3600) + "h " + ((total % 3600) / 60) + "m"
+                : (total / 60) + "m");
             statInst.setValue(String.valueOf(count));
             int mods = 0;
             if (this.currentInstance != null) {
@@ -3807,6 +3820,21 @@ extends JFrame {
         }
     }
 
+    /**
+     * Instance kartindaki kisa sure metni: 46 dk -> "46m", 2 sa 21 dk ->
+     * "2h 21m". Eskiden 1 saatten kisa sureler "0h 46m" diye gosteriliyordu.
+     */
+    private static String compactPlayTime(long secs, boolean en) {
+        if (secs <= 0L) {
+            return en ? "Not played yet" : "Hen\u00fcz oynanmad\u0131";
+        }
+        if (secs < 3600L) {
+            long mins = secs / 60L;
+            return (mins <= 0L ? 1L : mins) + "m";
+        }
+        return (secs / 3600L) + "h " + ((secs % 3600L) / 60L) + "m";
+    }
+
     private static String fmtPlayTime(long l) {
         if (l < 60L) {
             return l + "s";
@@ -4569,6 +4597,8 @@ extends JFrame {
                     }
                 };
                 Object object = this.currentInstance != null ? this.currentInstance.name : "";
+                // Sure takibi icin oturum isaretcisi (oyun baslarken yazilir)
+                com.lubv.launcher.core.PlayTimeTracker.begin(launchTargetInstanceName);
                 String loaderName = this.currentInstance != null ? this.currentInstance.loader : "";
                 int n3 = this.currentInstance != null ? ModManager.loadRegistry(file).size() : 0;
                 DiscordRpc.onGameStart((String)object, loaderName, string2, n3);
@@ -10472,17 +10502,31 @@ extends JFrame {
      */
     private void handleGameExit(int n, long l, String launchedInstanceName) {
         if (launchedInstanceName != null && !launchedInstanceName.isBlank()) {
+            // PlayTimeTracker: oturum isaretcisinden hesaplanan sure daha
+            // buyukse onu kullanir (launcher'in kacirdigi kisim kurtulur).
+            long added = com.lubv.launcher.core.PlayTimeTracker.end(launchedInstanceName, l);
             Instance target = Instance.load(launchedInstanceName);
-            target.totalPlaySeconds += l;
-            target.lastPlayedMs = System.currentTimeMillis();
-            target.save();
             // Eger kullanici hala ayni instance'i goruntuluyorsa, ekrandaki
             // nesneyi de guncelleyelim ki UI hemen yeni degeri gostersin.
             if (this.currentInstance != null && launchedInstanceName.equals(this.currentInstance.name)) {
                 this.currentInstance.totalPlaySeconds = target.totalPlaySeconds;
                 this.currentInstance.lastPlayedMs = target.lastPlayedMs;
             }
-            this.log("[S\u00fcre] " + launchedInstanceName + " \u2192 +" + MainWindow.formatPlayTimeLocal(l) + "  |  Toplam: " + MainWindow.formatPlayTimeLocal(target.totalPlaySeconds));
+            this.log("[S\u00fcre] " + launchedInstanceName + " \u2192 +" + MainWindow.formatPlayTimeLocal(added) + "  |  Toplam: " + MainWindow.formatPlayTimeLocal(target.totalPlaySeconds));
+            // Instance kartlari ve ust bilgi blogu hemen yeni degeri gostersin.
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    this.refreshInstancesGrid();
+                    if (this.playTimeLabel != null && this.currentInstance != null) {
+                        long total = this.currentInstance.totalPlaySeconds;
+                        this.playTimeLabel.setText(total <= 0L
+                            ? (L10n.isEnglish() ? "Never played" : "Hi\u00e7 oynanmam\u0131\u015f")
+                            : (L10n.isEnglish() ? "Total time: " : "Toplam s\u00fcre: ") + MainWindow.fmtPlayTime(total));
+                    }
+                }
+                catch (Throwable ignored) {
+                }
+            });
         }
         // V36 GERI ALMA: oyun normal kapandiysa (exit 0) mod seti calisiyor
         // demektir - rollback snapshot'i artik gereksiz, temizle.
@@ -11387,7 +11431,7 @@ extends JFrame {
             fm = g2.getFontMetrics();
             g2.drawString(Nav.clip(fm, ld + "  \u00b7  " + ver, maxW + 20), textX, ty + 40);
             long secs = this.inst.totalPlaySeconds;
-            String played = secs <= 0 ? (en ? "Not played yet" : "Hen\u00fcz oynanmad\u0131") : (secs / 3600) + "h " + ((secs % 3600) / 60) + "m";
+            String played = MainWindow.compactPlayTime(secs, en);
             g2.setFont(Theme.uiFont(0, 11.0f));
             g2.setColor(Theme.TEXT_MUTED);
             g2.drawString(played, textX, ty + 58);

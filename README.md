@@ -6,15 +6,20 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
-## ⬇️ Download (Latest: v62)
+## ⬇️ Download (Latest: v63)
 
 | File | Description |
 |---|---|
 | [`Complex-Launcher-Setup.exe`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-Setup.exe) | Windows installer — auto-downloads the latest release, creates shortcuts, checks Java |
-| [`Complex-Launcher-v62-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v62-Windows.zip) | Portable Windows build (bundled runtime) |
-| [`Complex-Launcher-v62-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v62-Linux.zip) | Portable Linux build |
+| [`Complex-Launcher-v63-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v63-Windows.zip) | Portable Windows build (bundled runtime) |
+| [`Complex-Launcher-v63-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v63-Linux.zip) | Portable Linux build |
 
 Website: **https://complexlauncher.gt.tc**
+
+## What's new in v63
+
+- **Play time was never recorded.** Time was only saved when the game closed; if the launcher was closed while the game was still running (the common case), `onGameExit` never fired and the time was lost, so instance cards stayed on "Never played". Now a `.play_session` marker is written when the game starts, recovered on next launch (covering crashes and closing the launcher mid-game), and partial time is flushed when the launcher closes. The recorded value uses the larger of the measured exit time and the marker-based time.
+- **Short play times showed as "0h 46m".** Instance cards now show "46m" for sub-hour times.
 
 ## What's new in v62
 

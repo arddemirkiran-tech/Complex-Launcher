@@ -1,5 +1,5 @@
 {
-  "version": "62",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v62-Windows.zip",
-  "changelog": "v62: Modpacklar sayfasi bos aciliyordu (anahtarsiz CurseForge varsayilani) - artik Modrinth ile aciliyor ve populer modpack'lerle dolu geliyor; canli arama + ESC eklendi. Sonuc listelerinde aciklamalar uc nokta ile kirpiliyor, yatay kaydirma cubugu kalkti. Klasor yolu bozuk bolunmesi giderildi (tek satirda orta kirpma) ve modpack sayfasindaki Turkce karakterler duzeltildi."
+  "version": "63",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v63-Windows.zip",
+  "changelog": "v63: Oynama suresi kaybolma hatasi giderildi - oyun acikken launcher kapatilirsa sure kayboluyordu; artik oturum isaretcisi (.play_session) ile kurtarma yapiliyor, launcher kapanirken yarim oturum kaydediliyor. Instance kartinda kisa sure '0h 46m' yerine '46m' gosteriliyor."
 }
