@@ -1,5 +1,5 @@
 {
-  "version": "58",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v58-Windows.zip",
-  "changelog": "v58: Instance'lar sekmesinde kart cogalmasi/titremesi giderildi (EDT + tekilleştirme + hover timer sizintisi), Modlar sekmesinde cift kayit/hayalet satir temizlendi ve secim korunuyor. Forge/NeoForge modlarinin mods.toml/neoforge.mods.toml bildirimleri (zorunlu bagimliliklar, Maven surum araliklari, yanlis loader) artik modlu her acilista kontrol edilir; uyumsuz jar silinmez, .disabled yapilir. v57 metin kirpilmasi duzeltmeleri dahildir."
+  "version": "59",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v59-Windows.zip",
+  "changelog": "v59: Modlar sayfasinda fare gezdirince olusan tooltip yigilmasi (liste 'dupeleniyor/bozuluyor' gorunumu) giderildi; tooltip artik Swing'in kendi getToolTipText mekanizmasiyla uretiliyor. Ayrica launcher'in sessizce acilmama hatasi duzeltildi (zaten calisiyor mesaji gosterilmeden System.exit cagriliyordu) ve oyun/sunucu acikken kalan launcher.lock kilidi artik acilisi engellemiyor. v58 instance/mod liste duzeltmeleri ve Forge/NeoForge metadata kontrolu dahildir."
 }

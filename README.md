@@ -6,15 +6,21 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
-## ⬇️ Download (Latest: v58)
+## ⬇️ Download (Latest: v59)
 
 | File | Description |
 |---|---|
 | [`Complex-Launcher-Setup.exe`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-Setup.exe) | Windows installer — auto-downloads the latest release, creates shortcuts, checks Java |
-| [`Complex-Launcher-v58-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v58-Windows.zip) | Portable Windows build (bundled runtime) |
-| [`Complex-Launcher-v58-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v58-Linux.zip) | Portable Linux build |
+| [`Complex-Launcher-v59-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v59-Windows.zip) | Portable Windows build (bundled runtime) |
+| [`Complex-Launcher-v59-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v59-Linux.zip) | Portable Linux build |
 
 Website: **https://complexlauncher.gt.tc**
+
+## What's new in v59
+
+- **Mods page no longer glitches while moving the mouse.** The installed/search lists called `setToolTipText(...)` on every `mouseMoved` event; Swing's `ToolTipManager` rebuilds the popup on each of those calls, so with mods present the pointer sweeping across rows left overlapping/pinned tooltip windows that looked like the list "duplicating and breaking" (with no mods there are no rows, which is why it only happened with mods installed). Tooltips are now produced by Swing itself through `JList.getToolTipText(MouseEvent)` (new `ListTips` helper) - no programmatic show/hide, nothing repainted while the mouse moves.
+- **Fixed the silent "launcher does not open" case.** The single-instance check showed the "already running" message via `invokeLater` and then called `System.exit(0)` before the EDT could display it, so the app just vanished with no window and no message. The message is now shown before exiting.
+- **Stale/inherited `launcher.lock` no longer blocks startup.** The launcher lock file could stay held after the game/server it had started, making the launcher refuse to start until the game was closed. If the lock cannot be taken and no other launcher process is actually running, the lock file is recreated and startup continues; a real second launcher still gets the "already running" notice.
 
 ## What's new in v58
 

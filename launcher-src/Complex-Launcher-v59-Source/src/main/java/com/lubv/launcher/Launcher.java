@@ -29,7 +29,11 @@ public class Launcher {
     public static void main(String[] stringArray) {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> CrashLog.log(throwable));
         if (!Launcher.acquireSingleInstanceLock()) {
-            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(null, L10n.get("already_running"), "Complex Launcher", 1));
+            // BUG FIX: dialog invokeLater ile kuyruga atilip hemen System.exit
+            // cagriliyordu; EDT'ye sira gelmeden JVM kapandigi icin kullanici
+            // HICBIR SEY gormuyordu ("launcher acilmiyor" gibi). Artik mesaj
+            // gosterilene kadar beklenir.
+            JOptionPane.showMessageDialog(null, L10n.get("already_running"), "Complex Launcher", 1);
             System.exit(0);
             return;
         }
@@ -183,7 +187,31 @@ public class Launcher {
     private static boolean acquireSingleInstanceLock() {
         try {
             Paths.GAME_DIR.mkdirs();
-            lockChannel = FileChannel.open(new File(Paths.GAME_DIR, "launcher.lock").toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+            if (tryLockLauncherFile()) {
+                return true;
+            }
+            // Kilit alinamadi. ONCEDEN burada kosulsuz "zaten calisiyor" denip
+            // cikiliyordu. Oysa launcher'dan baslatilan COCUK surecler (oyun /
+            // sunucu) launcher.lock dosyasini acik tutabiliyor: oyun oynarken
+            // launcher'i yeniden acmak sessizce hicbir sey yapmiyordu.
+            if (anotherLauncherProcessRunning()) {
+                return false;
+            }
+            // Kilit sahibi launcher degil (oyun/cocuk surec ya da olu surec):
+            // dosyayi yenile ve tekrar dene - yeni dosya yeni kilit demek.
+            File stale = new File(Paths.GAME_DIR, "launcher.lock");
+            stale.delete();
+            return tryLockLauncherFile();
+        }
+        catch (Exception exception) {
+            return true;
+        }
+    }
+
+    private static boolean tryLockLauncherFile() {
+        try {
+            lockChannel = FileChannel.open(new File(Paths.GAME_DIR, "launcher.lock").toPath(),
+                StandardOpenOption.CREATE, StandardOpenOption.WRITE);
             lock = lockChannel.tryLock();
             if (lock == null) {
                 lockChannel.close();
@@ -195,6 +223,27 @@ public class Launcher {
         catch (Exception exception) {
             return true;
         }
+    }
+
+    /**
+     * Gercekten ikinci bir launcher acik mi? Surec listesine bakilir; oyun veya
+     * sunucu surecleri Complex-Launcher.jar ile calismadigi icin sayilmaz.
+     */
+    private static boolean anotherLauncherProcessRunning() {
+        long self = ProcessHandle.current().pid();
+        return ProcessHandle.allProcesses().anyMatch(process -> {
+            try {
+                if (process.pid() == self) {
+                    return false;
+                }
+                String commandLine = process.info().commandLine().orElse("");
+                return commandLine.contains("Complex-Launcher.jar")
+                    || commandLine.contains("ComplexLauncher.jar");
+            }
+            catch (Exception ignored) {
+                return false;
+            }
+        });
     }
 
     private static /* synthetic */ void lambdaBootFinish(SplashScreen splashScreen, MainWindow mainWindow, ActionEvent actionEvent) {

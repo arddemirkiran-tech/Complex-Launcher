@@ -108,7 +108,13 @@ extends JPanel {
     private final JList<ModSearchHit> resultsList = new EmptyList<ModSearchHit>(this.resultsModel, Icons.Kind.MODS, com.lubv.launcher.core.L10n.isEnglish() ? "Find your next mod" : "Bir mod ke\u015ffet", com.lubv.launcher.core.L10n.isEnglish() ? "Search above, or press Random" : "Yukar\u0131dan ara veya Rastgele\u0027ye bas");
     private final JLabel filterChip = new JLabel();
     private final DefaultListModel<Object> installedModel = new DefaultListModel();
-    private final JList<Object> installedList = new JList<Object>(this.installedModel);
+    /** Tooltip Swing'in kendi mekanizmasiyla: mouse-move dinleyicisi yok. */
+    private final JList<Object> installedList = new JList<Object>(this.installedModel) {
+        @Override
+        public String getToolTipText(MouseEvent mouseEvent) {
+            return ListTips.forEvent(this, mouseEvent);
+        }
+    };
     private final JProgressBar progressBar = new JProgressBar(0, 100);
     private final JLabel progressLabel = new JLabel(" ");
     /** Devam eden kurulumu iptal etmek icin: buton + bayrak + isci thread'i. */
@@ -375,7 +381,6 @@ extends JPanel {
         this.resultsList.setBackground(Theme.BG_BASE);
         this.resultsList.setOpaque(true);
         this.resultsList.setBorder(BorderFactory.createEmptyBorder());
-        this.installHoverTooltip(this.resultsList);
         this.resultsList.addMouseListener(new MouseAdapter(){
 
             @Override
@@ -502,7 +507,6 @@ extends JPanel {
         this.installedList.setSelectionMode(2);
         this.installedList.setBackground(Theme.BG_BASE);
         this.installedList.setBorder(BorderFactory.createEmptyBorder());
-        this.installHoverTooltip(this.installedList);
         this.installedList.addMouseListener(new MouseAdapter(){
 
             @Override
@@ -1838,64 +1842,6 @@ extends JPanel {
         graphics2D.drawString(string, (38 - fontMetrics.stringWidth(string)) / 2, (38 + fontMetrics.getAscent()) / 2 - 3);
         graphics2D.dispose();
         return new ImageIcon(bufferedImage);
-    }
-
-    /**
-     * Hover tooltip for the list rows.
-     *
-     * v51 GUI BUG FIX: the old version called {@code setToolTipText} on EVERY
-     * mouse-moved event. Swing's ToolTipManager re-creates the popup for each of
-     * those calls, so dragging the mouse across the mod list produced overlapping
-     * tooltip windows (the "duplicated / glitching" rows users reported) and left
-     * a stale tooltip pinned when the pointer moved to empty space below the last
-     * row. Now the text changes only when the hovered ROW changes, empty space
-     * clears it, and leaving the list clears it.
-     */
-    private void installHoverTooltip(final JList<?> jList) {
-        final int[] lastRow = { -1 };
-        jList.addMouseMotionListener(new MouseMotionAdapter(){
-
-            @Override
-            public void mouseMoved(MouseEvent mouseEvent) {
-                int n = jList.locationToIndex(mouseEvent.getPoint());
-                if (n >= 0) {
-                    // locationToIndex() returns the nearest row even when the
-                    // cursor is in the empty area below the last cell.
-                    Rectangle bounds = jList.getCellBounds(n, n);
-                    if (bounds == null || !bounds.contains(mouseEvent.getPoint())) {
-                        n = -1;
-                    } else if (n >= jList.getModel().getSize()) {
-                        n = -1;
-                    }
-                }
-                if (n == lastRow[0]) {
-                    return;
-                }
-                lastRow[0] = n;
-                if (n < 0) {
-                    jList.setToolTipText(null);
-                    return;
-                }
-                Object e = jList.getModel().getElementAt(n);
-                if (e instanceof ModSearchHit) {
-                    ModSearchHit modSearchHit = (ModSearchHit)e;
-                    jList.setToolTipText("<html><b>" + ModsPanel.esc(modSearchHit.title) + "</b><br>" + ModsPanel.esc(modSearchHit.description) + "</html>");
-                } else if (e instanceof ModManager.InstalledMod) {
-                    ModManager.InstalledMod installedMod = (ModManager.InstalledMod)e;
-                    jList.setToolTipText("<html><b>" + ModsPanel.esc(installedMod.projectTitle) + "</b><br>" + installedMod.versionNumber + "</html>");
-                } else {
-                    jList.setToolTipText(null);
-                }
-            }
-        });
-        jList.addMouseListener(new MouseAdapter(){
-
-            @Override
-            public void mouseExited(MouseEvent mouseEvent) {
-                lastRow[0] = -1;
-                jList.setToolTipText(null);
-            }
-        });
     }
 
     private static String esc(String string) {

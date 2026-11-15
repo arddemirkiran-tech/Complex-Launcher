@@ -6,6 +6,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
 import javax.swing.JList;
 import javax.swing.ListModel;
 
@@ -20,6 +21,13 @@ class EmptyList<T> extends JList<T> {
         this.kind = kind;
         this.title = title;
         this.sub = sub;
+    }
+
+    @Override
+    public String getToolTipText(MouseEvent event) {
+        // Fare gezinirken programatik setToolTipText cagirmak yerine Swing'in
+        // kendi tooltip mekanizmasi kullanilir (hayalet tooltip penceresi yok).
+        return ListTips.forEvent(this, event);
     }
 
     @Override
