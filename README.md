@@ -6,15 +6,22 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
-## ⬇️ Download (Latest: v60)
+## ⬇️ Download (Latest: v61)
 
 | File | Description |
 |---|---|
 | [`Complex-Launcher-Setup.exe`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-Setup.exe) | Windows installer — auto-downloads the latest release, creates shortcuts, checks Java |
-| [`Complex-Launcher-v60-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v60-Windows.zip) | Portable Windows build (bundled runtime) |
-| [`Complex-Launcher-v60-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v60-Linux.zip) | Portable Linux build |
+| [`Complex-Launcher-v61-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v61-Windows.zip) | Portable Windows build (bundled runtime) |
+| [`Complex-Launcher-v61-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v61-Linux.zip) | Portable Linux build |
 
 Website: **https://complexlauncher.gt.tc**
+
+## What's new in v61
+
+- **The installed-side footer (info + Remove / Open Folder) was missing on first paint.** On the Shaders and Resource Packs pages the right panel lives in a `JLayeredPane` whose children were only given bounds in a resize listener, so the footer did not lay out until a mouse move forced a repaint and the panel appeared to shift. The layered pane now lays its children out on every layout pass.
+- **Info text set after construction was never revalidated**, so the block kept its stale height; `revalidate()` is called after the text is filled and a duplicated `add(infoPanel)` in the shader panel was removed.
+- **Long folder paths wrapped mid-word** (`...\shaderpacks` rendered as `shaderpac / ks`); the new `TextWrap.breakPath` helper inserts zero-width spaces after path separators so lines break at folder boundaries.
+- **Typo fix:** "Otomatik kurulacak shader ayarlanmamis" -> "ayarlanmamış" (shader and resource pack panels).
 
 ## What's new in v60
 

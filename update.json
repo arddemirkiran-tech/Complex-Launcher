@@ -1,5 +1,5 @@
 {
-  "version": "60",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v60-Windows.zip",
-  "changelog": "v60: Shader, Doku Paketi ve Modpack arama listelerindeki tooltip yigilmasi (fare gezinirken liste bozuluyor/dupeleniyor gorunumu) giderildi; mod ac/kapat artik dogru dosya adini kullaniyor ve kilitli dosyada sessizce yanlis durum kaydetmiyor; ZIP ice aktarma yol kontrolu kardes klasore yazmayi engelliyor; guncelleme surum karsilastirmasi bozuk etiketlerde cokmuyor."
+  "version": "61",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v61-Windows.zip",
+  "changelog": "v61: Shaderlar ve Doku Paketleri sayfalarinda sag panelin alt blogu (bilgi + Kaldir/Klasoru Ac) ilk acilista gorunmuyor ve fare hareketiyle sonradan beliriyordu - duzeltildi. Uzun klasor yollari kelime ortasinda kirilmiyor, yazim hatasi giderildi. v60'taki tooltip/mod toggle/ZIP yol/guncelleme karsilastirma duzeltmeleri dahildir."
 }

@@ -110,7 +110,21 @@ extends JPanel {
         this.installedSideWrap.add((Component)this.buildInstalledSide(), "Center");
         this.shaderDetailOverlay = this.buildShaderDetailOverlay();
         this.shaderDetailOverlay.setVisible(false);
-        this.installedRightStack = new JLayeredPane();
+        // JLayeredPane cocuklarini KENDISI yerlesitirmez; eskiden
+        // bounds yalnizca componentResized icinde veriliyordu. Bu yuzden
+        // sag panelin alt blogu (bilgi + Kaldir/Klasoru Ac) ilk cizimde
+        // yerlesmiyor, ancak bir fare hareketi repaint tetikleyince
+        // gorunuyordu. doLayout her yerlesimde cocuklari kapladigi icin
+        // blok artik sayfa acilir acilmaz dogru yerde.
+        this.installedRightStack = new JLayeredPane() {
+            @Override
+            public void doLayout() {
+                java.awt.Component[] children = this.getComponents();
+                for (java.awt.Component child : children) {
+                    child.setBounds(0, 0, this.getWidth(), this.getHeight());
+                }
+            }
+        };
         this.installedRightStack.setOpaque(false);
         this.installedRightStack.add((Component)this.installedSideWrap, JLayeredPane.DEFAULT_LAYER);
         this.installedRightStack.add((Component)this.shaderDetailOverlay, JLayeredPane.PALETTE_LAYER);
@@ -426,20 +440,25 @@ extends JPanel {
             int count = dir != null && dir.isDirectory() ? dir.listFiles((d, name) -> name.toLowerCase().endsWith(".zip")) != null
                 ? java.util.Objects.requireNonNull(dir.listFiles((d, name) -> name.toLowerCase().endsWith(".zip"))).length : 0 : 0;
             StringBuilder sb = new StringBuilder();
-            sb.append(isEn ? "Folder: " : "Klasor: ").append(dir != null ? dir.getAbsolutePath() : "?").append("\n");
+            sb.append(isEn ? "Folder: " : "Klasor: ").append(dir != null ? TextWrap.breakPath(dir.getAbsolutePath()) : "?").append("\n");
             sb.append(isEn ? "Installed shader packs: " : "Kurulu shader paketi: ").append(count).append("\n");
             // Otomatik kurulum listesindeki shaderlari goster.
             java.util.List<String> autoShaders = MainWindow.listCustomAutoModsOfType("shader");
             if (!autoShaders.isEmpty()) {
                 sb.append(isEn ? "Auto-install shaders: " : "Otomatik kurulacak shaderlar: ").append(String.join(", ", autoShaders));
             } else {
-                sb.append(isEn ? "No auto-install shaders configured (Settings tab)." : "Otomatik kurulacak shader ayarlanmamis (Ayarlar sekmesi).");
+                sb.append(isEn ? "No auto-install shaders configured (Settings tab)." : "Otomatik kurulacak shader ayarlanmamış (Ayarlar sekmesi).");
             }
             infoArea.setText(sb.toString());
+            // BUG FIX: bilgi metni sonradan doldugu icin panelin tercih edilen
+            // yuksekligi degisiyordu; revalidate edilmedigi icin "Kaldir /
+            // Klasoru Ac" bloku ilk cizimde gorunmuyor, ancak sonraki fare
+            // hareketinde ortaya cikiyordu (sayfa kayiyor gibi gorunuyordu).
+            infoArea.revalidate();
+            jPanel.revalidate();
         };
         refreshShaderInfo.run();
         this.shaderInfoRefresher = refreshShaderInfo;
-        jPanel.add((Component)infoPanel, "South");
 
         JPanel jPanel2 = new JPanel(new GridLayout(1, 2, 6, 0));
         JButton jButton = UiFx.dangerButton(isEn ? "Remove" : "Kaldir");

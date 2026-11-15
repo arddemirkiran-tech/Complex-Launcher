@@ -107,7 +107,21 @@ extends JPanel {
         this.installedSideWrap.add((Component)this.buildInstalledSide(), "Center");
         this.detailOverlay = this.buildDetailOverlay();
         this.detailOverlay.setVisible(false);
-        this.installedRightStack = new JLayeredPane();
+        // JLayeredPane cocuklarini KENDISI yerlesitirmez; eskiden
+        // bounds yalnizca componentResized icinde veriliyordu. Bu yuzden
+        // sag panelin alt blogu (bilgi + Kaldir/Klasoru Ac) ilk cizimde
+        // yerlesmiyor, ancak bir fare hareketi repaint tetikleyince
+        // gorunuyordu. doLayout her yerlesimde cocuklari kapladigi icin
+        // blok artik sayfa acilir acilmaz dogru yerde.
+        this.installedRightStack = new JLayeredPane() {
+            @Override
+            public void doLayout() {
+                java.awt.Component[] children = this.getComponents();
+                for (java.awt.Component child : children) {
+                    child.setBounds(0, 0, this.getWidth(), this.getHeight());
+                }
+            }
+        };
         this.installedRightStack.setOpaque(false);
         this.installedRightStack.add((Component)this.installedSideWrap, JLayeredPane.DEFAULT_LAYER);
         this.installedRightStack.add((Component)this.detailOverlay, JLayeredPane.PALETTE_LAYER);
@@ -425,15 +439,21 @@ extends JPanel {
                 count = files != null ? files.length : 0;
             }
             StringBuilder sb = new StringBuilder();
-            sb.append(isEn ? "Folder: " : "Klasor: ").append(dir != null ? dir.getAbsolutePath() : "?").append("\n");
+            sb.append(isEn ? "Folder: " : "Klasor: ").append(dir != null ? TextWrap.breakPath(dir.getAbsolutePath()) : "?").append("\n");
             sb.append(isEn ? "Installed resource packs: " : "Kurulu doku paketi: ").append(count).append("\n");
             java.util.List<String> autoRps = MainWindow.listCustomAutoModsOfType("resourcepack");
             if (!autoRps.isEmpty()) {
                 sb.append(isEn ? "Auto-install packs: " : "Otomatik kurulacak paketler: ").append(String.join(", ", autoRps));
             } else {
-                sb.append(isEn ? "No auto-install packs configured (Settings tab)." : "Otomatik kurulacak paket ayarlanmamis (Ayarlar sekmesi).");
+                sb.append(isEn ? "No auto-install packs configured (Settings tab)." : "Otomatik kurulacak paket ayarlanmamış (Ayarlar sekmesi).");
             }
             infoArea.setText(sb.toString());
+            // BUG FIX: bilgi metni sonradan doldugu icin panelin tercih edilen
+            // yuksekligi degisiyordu; revalidate edilmedigi icin "Kaldir /
+            // Klasoru Ac" bloku ilk cizimde gorunmuyor, ancak sonraki fare
+            // hareketinde ortaya cikiyordu (sayfa kayiyor gibi gorunuyordu).
+            infoArea.revalidate();
+            jPanel.revalidate();
         };
         refreshInfo.run();
         this.rpInfoRefresher = refreshInfo;
