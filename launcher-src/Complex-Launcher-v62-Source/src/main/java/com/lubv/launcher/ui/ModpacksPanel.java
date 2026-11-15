@@ -91,7 +91,9 @@ extends JPanel {
     private static final Set<String> ICON_LOADING = Collections.synchronizedSet(new HashSet());
     private static final ImageIcon PLACEHOLDER = ModpacksPanel.makePlaceholder();
     private final JTextField searchField;
-    private final JToggleButton sourceToggle = new JToggleButton("CurseForge");
+    // V62: Modrinth varsayilan kaynak - CurseForge API anahtari gerektirir,
+    // anahtar yokken sayfa bos liste gosteriyordu.
+    private final JToggleButton sourceToggle = new JToggleButton("Modrinth");
     private GalleryStrip galleryStrip;
     private final DefaultListModel<ModSearchHit> resultsModel = new DefaultListModel();
     private final JList<ModSearchHit> resultsList = new EmptyList<ModSearchHit>(this.resultsModel, Icons.Kind.PACK, com.lubv.launcher.core.L10n.isEnglish() ? "Find a modpack" : "Modpack bul", com.lubv.launcher.core.L10n.isEnglish() ? "Search CurseForge or Modrinth" : "CurseForge veya Modrinth\u0027te ara");
@@ -127,6 +129,8 @@ extends JPanel {
         jPanel.add(this.buildInstallCard());
         this.add((Component)jPanel, "Center");
         this.add((Component)this.buildProgressBar(), "South");
+        // V62: sayfa acilista populer modpack'lerle dolu gelsin.
+        this.doSearch();
     }
 
     /** V34: "Mod bilgisi oto acilsin" ayari - ModpacksPanel icin de gecerli. */
@@ -179,7 +183,8 @@ extends JPanel {
         JPanel jPanel3 = new JPanel(new BorderLayout(6, 0));
         jPanel3.setOpaque(true);
         jPanel3.setBackground(Theme.BG_SURFACE);
-        this.sourceToggle.setToolTipText("Modpack'in aranacagi kaynak");
+        this.sourceToggle.setToolTipText(com.lubv.launcher.core.L10n.isEnglish() ? "Where modpacks are searched" : "Modpack'lerin aranaca\u011f\u0131 kaynak");
+        this.sourceToggle.setSelected(true);
         this.sourceToggle.addActionListener(actionEvent -> {
             this.sourceToggle.setText(this.sourceToggle.isSelected() ? "Modrinth" : "CurseForge");
             this.resultsList.clearSelection();
@@ -187,8 +192,43 @@ extends JPanel {
             if (this.galleryStrip != null) {
                 this.galleryStrip.clear();
             }
+            // V62: kaynak degisince o kaynagin populerlerini hemen getir.
+            this.doSearch();
         });
         this.searchField.addActionListener(actionEvent -> this.doSearch());
+        // V62 CANLI ARAMA: yazarken 450ms sustuktan sonra otomatik arar.
+        // ESC temizler + populer listeye doner.
+        javax.swing.Timer liveTimer = new javax.swing.Timer(450, actionEvent -> this.doSearch());
+        liveTimer.setRepeats(false);
+        this.searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener(){
+            private void schedule() {
+                liveTimer.restart();
+            }
+
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent documentEvent) {
+                this.schedule();
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent documentEvent) {
+                this.schedule();
+            }
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent documentEvent) {
+                this.schedule();
+            }
+        });
+        javax.swing.InputMap sfIM = this.searchField.getInputMap(javax.swing.JComponent.WHEN_FOCUSED);
+        sfIM.put(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_ESCAPE, 0), "clearSearch");
+        this.searchField.getActionMap().put("clearSearch", new javax.swing.AbstractAction(){
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent actionEvent) {
+                ModpacksPanel.this.searchField.setText("");
+                ModpacksPanel.this.doSearch();
+            }
+        });
         JButton jButton = UiFx.accentButton(com.lubv.launcher.core.L10n.isEnglish() ? "Search" : "Ara");
         jButton.addActionListener(actionEvent -> this.doSearch());
         jPanel3.add((Component)this.sourceToggle, "West");
@@ -228,7 +268,7 @@ extends JPanel {
             }
         });
         JScrollPane jScrollPane = UiFx.cleanScroll(this.resultsList);
-        JButton jButton2 = UiFx.accentButton(com.lubv.launcher.core.L10n.isEnglish() ? "Install Selected Modpack" : "Secili Modpack'i Kur");
+        JButton jButton2 = UiFx.accentButton(com.lubv.launcher.core.L10n.isEnglish() ? "Install Selected Modpack" : "Se\u00e7ili Modpack'i Kur");
         jButton2.addActionListener(actionEvent -> this.installSelected());
         this.galleryStrip = new GalleryStrip();
         this.galleryStrip.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
@@ -327,18 +367,18 @@ extends JPanel {
     private JPanel buildInstallCard() {
         JPanel jPanel = ModpacksPanel.buildCard();
         jPanel.setLayout(new BorderLayout(0, 12));
-        JLabel jLabel = new JLabel(com.lubv.launcher.core.L10n.isEnglish() ? "Local Import" : "Yerel Ice Aktar");
+        JLabel jLabel = new JLabel(com.lubv.launcher.core.L10n.isEnglish() ? "Local Import" : "Yerel \u0130\u00e7e Aktar");
         jLabel.setFont(Theme.uiFont(1, 14.0f));
         jLabel.setForeground(Theme.TEXT_PRIMARY);
         // Sabit <center> + uzun satir karttan genisti; yazi kesiliyordu. Artik sarar.
         JLabel jLabel2 = new WrapLabel(com.lubv.launcher.core.L10n.isEnglish()
             ? "You can import a modpack by selecting a .zip or .mrpack file from your computer."
-            : "Bilgisayarinizdan .zip veya .mrpack dosyasi secerek modpack ice aktarabilirsiniz.");
+            : "Bilgisayar\u0131n\u0131zdan .zip veya .mrpack dosyas\u0131 se\u00e7erek modpack i\u00e7e aktarabilirsiniz.");
         jLabel2.setFont(jLabel2.getFont().deriveFont(0, 12.0f));
         jLabel2.setForeground(Theme.TEXT_MUTED);
         jLabel2.setHorizontalAlignment(0);
-        JButton jButton = UiFx.ghostButton(com.lubv.launcher.core.L10n.isEnglish() ? "+ Import From Local File" : "+ Yerel Dosyadan Ice Aktar");
-        jButton.setToolTipText(com.lubv.launcher.core.L10n.isEnglish() ? "Select a .zip or .mrpack file from your computer" : "Bilgisayarinizdan .zip veya .mrpack dosyasi secin");
+        JButton jButton = UiFx.ghostButton(com.lubv.launcher.core.L10n.isEnglish() ? "+ Import From Local File" : "+ Yerel Dosyadan \u0130\u00e7e Aktar");
+        jButton.setToolTipText(com.lubv.launcher.core.L10n.isEnglish() ? "Select a .zip or .mrpack file from your computer" : "Bilgisayar\u0131n\u0131zdan .zip veya .mrpack dosyas\u0131 se\u00e7in");
         jButton.addActionListener(actionEvent -> this.importLocalModpack());
         JPanel jPanel2 = new JPanel();
         jPanel2.setLayout(new BoxLayout(jPanel2, 1));
@@ -390,10 +430,19 @@ extends JPanel {
 
     private void doSearch() {
         String string = this.searchField.getText().trim();
-        if (string.isEmpty()) {
+        boolean bl = this.isCurseforge();
+        // V62: CurseForge anahtari yoksa CF sorgusu hata doner ve liste bos
+        // kalir. Sessizce bos liste gostermek yerine Modrinth'e gec.
+        if (bl && !com.lubv.launcher.mods.CurseForgeApi.hasAnyKey(this.apiKeySupplier.get())) {
+            SwingUtilities.invokeLater(() -> {
+                this.sourceToggle.setSelected(true);
+                this.sourceToggle.setText("Modrinth");
+                this.resultsModel.clear();
+                this.logConsumer.accept(com.lubv.launcher.core.L10n.isEnglish() ? "CurseForge needs an API key - showing Modrinth results instead." : "CurseForge i\u00e7in API anahtar\u0131 gerekli - bunun yerine Modrinth sonu\u00e7lar\u0131 g\u00f6steriliyor.");
+                this.doSearch();
+            });
             return;
         }
-        boolean bl = this.isCurseforge();
         this.resultsModel.clear();
         new Thread(() -> {
             try {
@@ -413,7 +462,7 @@ extends JPanel {
                     for (ModSearchHit modSearchHit : results) {
                         this.resultsModel.addElement(modSearchHit);
                     }
-                    if (results.isEmpty()) {
+                    if (results.isEmpty() && !string.isEmpty()) {
                         this.logConsumer.accept("Modpack bulunamadi: " + string);
                     }
                 });
@@ -948,8 +997,9 @@ extends JPanel {
     extends RowPanel
     implements ListCellRenderer<ModSearchHit> {
         private final JLabel iconLabel = new JLabel();
-        private final JLabel titleLabel = new JLabel();
-        private final JLabel descLabel = new JLabel();
+        // V62: kolona sigmayan baslik/aciklama uc nokta ile kirpilir.
+        private final JLabel titleLabel = new EllipsisLabel();
+        private final JLabel descLabel = new EllipsisLabel();
         private final JLabel metaLabel = new JLabel();
 
         ModpackCellRenderer() {

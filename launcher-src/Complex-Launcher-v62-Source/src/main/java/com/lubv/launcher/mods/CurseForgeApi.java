@@ -59,6 +59,11 @@ public class CurseForgeApi {
      * cagri yapan yerlerde kullanici anahtari yoksa otomatik olarak
      * gomulu anahtara dusulur.
      */
+    /** Kullanilabilir bir anahtar var mi (kullanici anahtari veya gomulu)? */
+    public static boolean hasAnyKey(String userKey) {
+        return userKey != null && !userKey.isBlank() || !DEFAULT_API_KEY.isBlank();
+    }
+
     private static String resolveApiKey(String apiKey) {
         if (apiKey != null && !apiKey.isBlank()) {
             return apiKey;

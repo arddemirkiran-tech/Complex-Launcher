@@ -1,5 +1,5 @@
 {
-  "version": "61",
-  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v61-Windows.zip",
-  "changelog": "v61: Shaderlar ve Doku Paketleri sayfalarinda sag panelin alt blogu (bilgi + Kaldir/Klasoru Ac) ilk acilista gorunmuyor ve fare hareketiyle sonradan beliriyordu - duzeltildi. Uzun klasor yollari kelime ortasinda kirilmiyor, yazim hatasi giderildi. v60'taki tooltip/mod toggle/ZIP yol/guncelleme karsilastirma duzeltmeleri dahildir."
+  "version": "62",
+  "downloadUrl": "https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v62-Windows.zip",
+  "changelog": "v62: Modpacklar sayfasi bos aciliyordu (anahtarsiz CurseForge varsayilani) - artik Modrinth ile aciliyor ve populer modpack'lerle dolu geliyor; canli arama + ESC eklendi. Sonuc listelerinde aciklamalar uc nokta ile kirpiliyor, yatay kaydirma cubugu kalkti. Klasor yolu bozuk bolunmesi giderildi (tek satirda orta kirpma) ve modpack sayfasindaki Turkce karakterler duzeltildi."
 }

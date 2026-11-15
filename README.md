@@ -6,15 +6,23 @@
 
 A next-generation Minecraft launcher focused on robust mod management, real-time performance monitoring, and a flexible, modern user interface.
 
-## ⬇️ Download (Latest: v61)
+## ⬇️ Download (Latest: v62)
 
 | File | Description |
 |---|---|
 | [`Complex-Launcher-Setup.exe`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-Setup.exe) | Windows installer — auto-downloads the latest release, creates shortcuts, checks Java |
-| [`Complex-Launcher-v61-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v61-Windows.zip) | Portable Windows build (bundled runtime) |
-| [`Complex-Launcher-v61-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v61-Linux.zip) | Portable Linux build |
+| [`Complex-Launcher-v62-Windows.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v62-Windows.zip) | Portable Windows build (bundled runtime) |
+| [`Complex-Launcher-v62-Linux.zip`](https://github.com/arddemirkiran-tech/Complex-Launcher/releases/latest/download/Complex-Launcher-v62-Linux.zip) | Portable Linux build |
 
 Website: **https://complexlauncher.gt.tc**
+
+## What's new in v62
+
+- **The Modpacks page opened empty.** It defaulted to the CurseForge source, but the build ships no CurseForge API key, so every query failed and the list stayed blank with no message. The page now starts on Modrinth (no key needed), preloads popular modpacks on open, and falls back to Modrinth with a clear note if CurseForge is selected without a key.
+- **Modpack search had no live search or ESC reset** while the mod, shader and resource pack pages had both; typing now searches after 450 ms, ESC clears, and switching source immediately loads that source's popular list.
+- **List descriptions were cut mid-sentence with no ellipsis.** A new `EllipsisLabel` truncates to the row's real width, which also removed the pointless horizontal scrollbar under the result lists.
+- **Folder paths still broke mid-word.** The v61 zero-width-space trick did not work inside a Swing text area (`...\shaderpack` + `s`). The info block is now built from labels and long paths are middle-truncated on one line, so the folder name stays readable.
+- **Turkish characters:** "Seçili Modpack'i Kur", "Yerel İçe Aktar", the local-import hint and the source toggle tooltip now use proper Turkish characters and have an English variant.
 
 ## What's new in v61
 
